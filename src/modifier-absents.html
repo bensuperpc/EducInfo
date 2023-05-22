@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modifier les profs absents</title>
+  <link href="/Users/Chrom/Desktop/CouffV2/dist/output.css" rel="stylesheet">
+  <style>
+    /* Personnalisation supplémentaire du style si nécessaire */
+  </style>
+</head>
+
+<body>
+  <div class="container mx-auto">
+    <header class="text-center py-4">
+      <h1 class="text-2xl font-bold">Modifier les profs absents</h1>
+    </header>
+
+    <main>
+      <form class="w-1/2 mx-auto">
+        <div class="mb-4">
+          <label for="date" class="block font-bold mb-2">Date</label>
+          <input type="date" id="date" class="w-full border rounded px-3 py-2">
+        </div>
+        <div class="mb-4">
+          <label for="absentTeacher" class="block font-bold mb-2">Professeur absent</label>
+          <input type="text" id="absentTeacher" class="w-full border rounded px-3 py-2" placeholder="Nom du professeur">
+        </div>
+        <button type="button" id="addBtn" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          Ajouter
+        </button>
+      </form>
+
+      <div id="absentTeachersList" class="mt-8">
+        <h2 class="text-xl font-bold">Liste des profs absents</h2>
+        <ul id="absentTeachers" class="mt-4">
+          <!-- Les professeurs absents seront ajoutés dynamiquement ici -->
+        </ul>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Ajouter un professeur absent à la liste
+    function addAbsentTeacher() {
+      const date = document.getElementById('date').value;
+      const teacher = document.getElementById('absentTeacher').value;
+
+      // Créer un nouvel élément li avec les informations
+      const li = document.createElement('li');
+      li.textContent = `${date} - ${teacher}`;
+
+      // Ajouter l'élément li à la liste
+      document.getElementById('absentTeachers').appendChild(li);
+
+      // Réinitialiser les champs de saisie
+      document.getElementById('date').value = '';
+      document.getElementById('absentTeacher').value = '';
+    }
+
+    // Écouteur d'événement sur le bouton Ajouter
+    document.getElementById('addBtn').addEventListener('click', addAbsentTeacher);
+  </script>
+</body>
+
+</html>
