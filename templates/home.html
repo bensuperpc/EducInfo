@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="grid grid-cols-1 gap-8 p-4">
+    <!-- Bandeau d'absences principal -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-3xl font-bold mb-6 text-indigo-800 flex items-center">
+            <svg class="w-8 h-8 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Absences des Professeurs
+        </h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 text-lg">
+                <thead class="bg-indigo-50">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-lg font-bold text-indigo-800 uppercase">Professeur</th>
+                        <th class="px-6 py-4 text-center text-lg font-bold text-indigo-800 uppercase">Lundi</th>
+                        <th class="px-6 py-4 text-center text-lg font-bold text-indigo-800 uppercase">Mardi</th>
+                        <th class="px-6 py-4 text-center text-lg font-bold text-indigo-800 uppercase">Mercredi</th>
+                        <th class="px-6 py-4 text-center text-lg font-bold text-indigo-800 uppercase">Jeudi</th>
+                        <th class="px-6 py-4 text-center text-lg font-bold text-indigo-800 uppercase">Vendredi</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for absence in absences %}
+                    <tr class="hover:bg-gray-50 text-lg">
+                        <td class="px-6 py-4 whitespace-nowrap font-bold text-gray-900">{{ absence.professeur }}</td>
+                        {% for jour in ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'] %}
+                        <td class="px-6 py-4 text-center">
+                            {% set absent = getattr(absence, jour) %}
+                            <span class="px-4 py-2 inline-flex text-lg font-bold rounded-full {% if absent %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ 'ABSENT' if absent else 'PRÉSENT' }}
+                            </span>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section Événements et Widgets -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Événements à venir -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-2xl font-bold mb-6 text-indigo-800 flex items-center">
+                <svg class="w-7 h-7 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Événements à venir
+            </h3>
+            {% if events %}
+                <div class="space-y-4">
+                    {% for evt in events %}
+                        <div class="p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
+                            <h4 class="text-xl font-bold text-indigo-800">{{ evt.title }}</h4>
+                            <div class="text-lg text-indigo-600 mt-2">{{ evt.date.strftime('%d/%m/%Y') }}</div>
+                            {% if evt.description %}
+                                <p class="text-lg text-gray-700 mt-2">{{ evt.description }}</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-xl text-gray-500 italic">Aucun événement prévu</p>
+            {% endif %}
+        </div>
+
+        <!-- Menu de la cantine si activé -->
+        {% if config.show_menu_cantine %}
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-2xl font-bold mb-6 text-indigo-800 flex items-center">
+                <svg class="w-7 h-7 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                Menu de la Cantine
+            </h3>
+            <div class="text-lg prose max-w-none">
+                {{ config.menu_cantine|safe }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Script de rafraîchissement automatique -->
+<script>
+    // Rafraîchir la page toutes les 5 minutes
+    setTimeout(function() {
+        window.location.reload();
+    }, 5 * 60 * 1000);
+</script>
+{% endblock %}
