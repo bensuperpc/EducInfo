@@ -22,19 +22,44 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    {% for absence in absences %}
-                    <tr class="hover:bg-gray-50 text-lg">
-                        <td class="px-6 py-4 whitespace-nowrap font-bold text-gray-900">{{ absence.professeur }}</td>
-                        {% for jour in ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'] %}
-                        <td class="px-6 py-4 text-center">
-                            {% set absent = getattr(absence, jour) %}
-                            <span class="px-4 py-2 inline-flex text-lg font-bold rounded-full {% if absent %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
-                                {{ 'ABSENT' if absent else 'PRÉSENT' }}
-                            </span>
-                        </td>
+                    {% if absences %}
+                        {% for absence in absences %}
+                        <tr class="hover:bg-gray-50 text-lg">
+                            <td class="px-6 py-4 whitespace-nowrap font-bold text-gray-900">{{ absence.professeur }}</td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="px-4 py-2 inline-flex text-lg font-bold rounded-full {% if absence.lundi %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ 'ABSENT' if absence.lundi else 'PRÉSENT' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="px-4 py-2 inline-flex text-lg font-bold rounded-full {% if absence.mardi %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ 'ABSENT' if absence.mardi else 'PRÉSENT' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="px-4 py-2 inline-flex text-lg font-bold rounded-full {% if absence.mercredi %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ 'ABSENT' if absence.mercredi else 'PRÉSENT' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="px-4 py-2 inline-flex text-lg font-bold rounded-full {% if absence.jeudi %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ 'ABSENT' if absence.jeudi else 'PRÉSENT' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="px-4 py-2 inline-flex text-lg font-bold rounded-full {% if absence.vendredi %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ 'ABSENT' if absence.vendredi else 'PRÉSENT' }}
+                                </span>
+                            </td>
+                        </tr>
                         {% endfor %}
-                    </tr>
-                    {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                Aucune absence enregistrée
+                            </td>
+                        </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>

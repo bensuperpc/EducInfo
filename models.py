@@ -39,9 +39,12 @@ class Absence(db.Model):
 
 class WidgetConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    # show_weather = db.Column(db.Boolean, default=True)
     show_menu_cantine = db.Column(db.Boolean, default=False)
     menu_cantine = db.Column(db.Text, default="Menu non configuré")
+    
+    @staticmethod
+    def get_config():
+        return WidgetConfig.query.first() or WidgetConfig()
 
 class ThemeConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -78,7 +81,7 @@ class WeatherConfig(db.Model):
     api_key = db.Column(db.String(32), nullable=False, default='0b0b32c21c0e7a28f8dc6711e0c2e86b')
     city = db.Column(db.String(100), nullable=False, default='Paris')
     show_weather = db.Column(db.Boolean, default=True)
-
+    
     @staticmethod
     def get_config():
         config = WeatherConfig.query.first()

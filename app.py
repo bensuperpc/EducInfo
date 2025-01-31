@@ -55,6 +55,17 @@ def initialize_database():
 ### ROUTES
 
 @app.context_processor
+def utility_processor():
+    """Ajoute des fonctions utilitaires aux templates"""
+    def get_absence_status(absence, jour):
+        """Récupère le statut d'absence pour un jour donné"""
+        return getattr(absence, jour, False)
+    
+    return {
+        'get_absence_status': get_absence_status
+    }
+
+@app.context_processor
 def inject_config():
     """Injecte toutes les configurations nécessaires dans tous les templates"""
     return {
@@ -76,17 +87,28 @@ def internal_error(error):
 @app.route('/')
 def home():
     try:
-        config = WidgetConfig.query.first() or WidgetConfig()
+        # Récupération des configurations avec gestion d'erreurs
+        config = WidgetConfig.query.first()
+        if not config:
+            config = WidgetConfig()
+            db.session.add(config)
+            db.session.commit()
+            
+        # Récupération des absences et événements
         absences = Absence.query.all()
         events = Event.get_upcoming_events()
+        
+        # Vérification des données avant le rendu
+        logger.info(f'Chargement page d\'accueil: {len(absences)} absences, {len(events)} événements')
         
         return render_template('home.html', 
                              config=config, 
                              absences=absences, 
                              events=events)
     except Exception as e:
-        logger.error(f'Error in home route: {e}')
-        abort(500)
+        logger.error(f'Erreur page d\'accueil: {str(e)}')
+        # Pour le développement, afficher l'erreur complète
+        return f"Erreur : {str(e)}", 500
 
 @app.route('/login', methods=['GET','POST'])
 def login():
@@ -117,146 +139,164 @@ def admin_dashboard():
         'password_form': ChangePasswordForm(),
         'site_form': SiteConfigForm(),
         'weather_form': WeatherConfigForm(),
+        'widget_form': WidgetConfigForm()
     }
     
-    widget_config = WidgetConfig.query.first() or WidgetConfig()
-    forms['widget_form'] = WidgetConfigForm(obj=widget_config)
+    configs = {
+        'widget': WidgetConfig.query.first() or WidgetConfig(),
+        'site': SiteConfig.get_config(),
+        'weather': WeatherConfig.get_config()
+    }
     
-    site_config = SiteConfig.get_config()
-    weather_config = WeatherConfig.get_config()
-    absences = Absence.query.all()
-
-    # Pré-remplir les formulaires avec les valeurs actuelles
+    # Pré-remplir les formulaires
+    if not forms['widget_form'].is_submitted():
+        forms['widget_form'] = WidgetConfigForm(obj=configs['widget'])
     if not forms['site_form'].is_submitted():
-        forms['site_form'].site_name.data = site_config.site_name
+        forms['site_form'].site_name.data = configs['site'].site_name
     if not forms['weather_form'].is_submitted():
-        forms['weather_form'].api_key.data = weather_config.api_key
-        forms['weather_form'].city.data = weather_config.city
-        forms['weather_form'].show_weather.data = weather_config.show_weather
+        forms['weather_form'].api_key.data = configs['weather'].api_key
+        forms['weather_form'].city.data = configs['weather'].city
+        forms['weather_form'].show_weather.data = configs['weather'].show_weather
 
-    # Gestion des formulaires POST
     if request.method == 'POST':
-        # Gestion de la suppression d'absence
-        if 'delete_absence' in request.form:
-            absence_id = request.form.get('delete_absence')
-            absence = Absence.query.get(absence_id)
-            if absence:
-                db.session.delete(absence)
-                db.session.commit()
-                flash('Absence supprimée avec succès', 'success')
-                return redirect(url_for('admin_dashboard'))
+        form_handlers = {
+            'delete_absence': handle_absence_deletion,
+            'submit_widget': handle_widget_update,
+            'submit_absence': handle_absence_update,
+            'submit_password': handle_password_change,
+            'submit_event': handle_event_creation,
+            'delete_event': handle_event_deletion,
+            'submit_site': handle_site_config,
+            'submit_weather': handle_weather_config
+        }
 
-        # Gestion des widgets
-        if 'submit_widget' in request.form and forms['widget_form'].validate_on_submit():
-            if not widget_config:
-                widget_config = WidgetConfig()
-                db.session.add(widget_config)
-            
-            # widget_config.show_weather = widget_form.show_weather.data
-            widget_config.show_menu_cantine = forms['widget_form'].show_menu_cantine.data
-            widget_config.menu_cantine = forms['widget_form'].menu_cantine.data
-            db.session.commit()
-            flash('Configuration widgets mise à jour', 'success')
-            return redirect(url_for('admin_dashboard'))
-
-        # Gestion de l'ajout/modification d'absence
-        if 'submit_absence' in request.form and forms['absence_form'].validate_on_submit():
-            professeur = forms['absence_form'].professeur.data
-            jours = request.form.getlist('jours')  # Obtenir tous les jours sélectionnés
-
-            # Vérifier si le professeur existe déjà
-            absence = Absence.query.filter_by(professeur=professeur).first()
-            if not absence:
-                absence = Absence(professeur=professeur)
-                db.session.add(absence)
-                flash(f'Nouvelle absence ajoutée pour {professeur}', 'success')
-            else:
-                flash(f'Absence mise à jour pour {professeur}', 'info')
-
-            # Mettre à jour les jours
-            absence.lundi = 'lundi' in jours
-            absence.mardi = 'mardi' in jours
-            absence.mercredi = 'mercredi' in jours
-            absence.jeudi = 'jeudi' in jours
-            absence.vendredi = 'vendredi' in jours
-
-            db.session.commit()
-            return redirect(url_for('admin_dashboard'))
-
-        # Gestion du changement de mot de passe
-        if 'submit_password' in request.form and forms['password_form'].validate_on_submit():
-            user = User.query.filter_by(identifiant=current_user.identifiant).first()
-            if user and user.check_password(forms['password_form'].current_password.data):
-                user.set_password(forms['password_form'].new_password.data)
-                db.session.commit()
-                flash('Mot de passe modifié avec succès', 'success')
-                return redirect(url_for('logout'))
-            else:
-                flash('Mot de passe actuel incorrect', 'error')
-
-        # Gestion Widgets
-        if 'submit_widget' in request.form:
-            if forms['widget_form'].validate_on_submit():
-                widget_config.show_weather = forms['widget_form'].show_weather.data
-                widget_config.show_menu_cantine = forms['widget_form'].show_menu_cantine.data
-                widget_config.menu_cantine = forms['widget_form'].menu_cantine.data
-                db.session.commit()
-                flash('Configuration widgets mise à jour', 'success')
-                return redirect(url_for('admin_dashboard'))
-
-        # Gestion Événements
-        if 'submit_event' in request.form:
-            if forms['event_form'].validate_on_submit():
-                evt = Event(
-                    title=forms['event_form'].title.data,
-                    date=forms['event_form'].date.data,
-                    description=forms['event_form'].description.data
-                )
-                db.session.add(evt)
-                db.session.commit()
-                flash('Événement ajouté', 'success')
-                return redirect(url_for('admin_dashboard'))
-
-        if 'delete_event' in request.form:
-            event_id = request.form.get('delete_event')
-            evt = Event.query.get(event_id)
-            if evt:
-                db.session.delete(evt)
-                db.session.commit()
-                flash('Événement supprimé', 'warning')
-            return redirect(url_for('admin_dashboard'))
-
-        # Gestion de la configuration du site
-        if 'submit_site' in request.form and forms['site_form'].validate_on_submit():
-            site_config.site_name = forms['site_form'].site_name.data
-            db.session.commit()
-            flash('Nom de l\'établissement mis à jour', 'success')
-            return redirect(url_for('admin_dashboard'))
-
-        # Gestion de la configuration météo
-        if 'submit_weather' in request.form and forms['weather_form'].validate_on_submit():
-            weather_config.api_key = forms['weather_form'].api_key.data
-            weather_config.city = forms['weather_form'].city.data
-            weather_config.show_weather = forms['weather_form'].show_weather.data
-            db.session.commit()
-            
-            # Mettre à jour la configuration de l'application
-            app.config['WEATHER_API_KEY'] = weather_config.api_key
-            app.config['WEATHER_CITY'] = weather_config.city
-            
-            flash('Configuration météo mise à jour avec succès', 'success')
-            return redirect(url_for('admin_dashboard'))
+        for action, handler in form_handlers.items():
+            if action in request.form:
+                return handler(request, forms, configs)
 
     return render_template('admin_dashboard.html',
-                           absences=absences,
-                           widget_config=widget_config,
-                           future_events=Event.get_upcoming_events(),
-                           **forms) 
+                         absences=Absence.query.all(),
+                         widget_config=configs['widget'],
+                         future_events=Event.get_upcoming_events(),
+                         **forms)
+
+# Handlers pour les différentes actions
+def handle_absence_deletion(request, forms, configs):
+    absence_id = request.form.get('delete_absence')
+    absence = Absence.query.get(absence_id)
+    if absence:
+        db.session.delete(absence)
+        db.session.commit()
+        flash('Absence supprimée avec succès', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+def handle_widget_update(request, forms, configs):
+    if forms['widget_form'].validate_on_submit():
+        widget_config = configs['widget']
+        widget_config.show_menu_cantine = forms['widget_form'].show_menu_cantine.data
+        widget_config.menu_cantine = forms['widget_form'].menu_cantine.data
+        db.session.commit()
+        flash('Configuration widgets mise à jour', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+def handle_absence_update(request, forms, configs):
+    """Gère l'ajout ou la mise à jour d'une absence"""
+    if forms['absence_form'].validate_on_submit():
+        professeur = forms['absence_form'].professeur.data
+        jours = request.form.getlist('jours')
+        
+        # Recherche ou création d'une absence
+        absence = Absence.query.filter_by(professeur=professeur).first()
+        if not absence:
+            absence = Absence(professeur=professeur)
+            db.session.add(absence)
+            flash(f'Nouvelle absence ajoutée pour {professeur}', 'success')
+        else:
+            flash(f'Absence mise à jour pour {professeur}', 'info')
+
+        # Mise à jour des jours
+        absence.lundi = 'lundi' in jours
+        absence.mardi = 'mardi' in jours
+        absence.mercredi = 'mercredi' in jours
+        absence.jeudi = 'jeudi' in jours
+        absence.vendredi = 'vendredi' in jours
+
+        db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+def handle_weather_config(request, forms, configs):
+    if forms['weather_form'].validate_on_submit():
+        weather_config = configs['weather']
+        weather_config.api_key = forms['weather_form'].api_key.data
+        weather_config.city = forms['weather_form'].city.data
+        weather_config.show_weather = forms['weather_form'].show_weather.data
+        db.session.commit()
+        
+        app.config['WEATHER_API_KEY'] = weather_config.api_key
+        app.config['WEATHER_CITY'] = weather_config.city
+        
+        flash('Configuration météo mise à jour', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+def handle_password_change(request, forms, configs):
+    """Gère le changement de mot de passe"""
+    if forms['password_form'].validate_on_submit():
+        user = User.query.filter_by(identifiant=current_user.identifiant).first()
+        if user and user.check_password(forms['password_form'].current_password.data):
+            user.set_password(forms['password_form'].new_password.data)
+            db.session.commit()
+            flash('Mot de passe modifié avec succès', 'success')
+            return redirect(url_for('logout'))
+        else:
+            flash('Mot de passe actuel incorrect', 'error')
+    return redirect(url_for('admin_dashboard'))
+
+def handle_event_creation(request, forms, configs):
+    """Gère la création d'un événement"""
+    if forms['event_form'].validate_on_submit():
+        evt = Event(
+            title=forms['event_form'].title.data,
+            date=forms['event_form'].date.data,
+            description=forms['event_form'].description.data
+        )
+        db.session.add(evt)
+        db.session.commit()
+        flash('Événement ajouté', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+def handle_event_deletion(request, forms, configs):
+    """Gère la suppression d'un événement"""
+    event_id = request.form.get('delete_event')
+    evt = Event.query.get(event_id)
+    if evt:
+        db.session.delete(evt)
+        db.session.commit()
+        flash('Événement supprimé', 'warning')
+    return redirect(url_for('admin_dashboard'))
+
+def handle_site_config(request, forms, configs):
+    """Gère la configuration du site"""
+    if forms['site_form'].validate_on_submit():
+        site_config = configs['site']
+        site_config.site_name = forms['site_form'].site_name.data
+        db.session.commit()
+        flash('Nom de l\'établissement mis à jour', 'success')
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/get_updates')
 def get_updates():
-    """Route pour obtenir les mises à jour en temps réel"""
     try:
+        widget_config = WidgetConfig.query.first()
+        if not widget_config:
+            widget_config = WidgetConfig()
+            db.session.add(widget_config)
+            db.session.commit()
+
+        config_data = {
+            'show_menu_cantine': widget_config.show_menu_cantine,
+            'menu_cantine': widget_config.menu_cantine
+        }
+
         absences = [{
             'professeur': a.professeur,
             'lundi': a.lundi,
@@ -272,21 +312,14 @@ def get_updates():
             'description': e.description
         } for e in Event.get_upcoming_events()]
 
-        widget_config = WidgetConfig.query.first()
-        config_data = {
-            'show_weather': widget_config.show_weather,
-            'show_menu_cantine': widget_config.show_menu_cantine,
-            'menu_cantine': widget_config.menu_cantine
-        } if widget_config else {}
-
         return jsonify({
             'absences': absences,
             'events': events,
             'widget_config': config_data
         })
     except Exception as e:
-        logger.error(f'Error in get_updates: {e}')
-        return jsonify({'error': 'Une erreur est survenue'}), 500
+        logger.error(f'Error in get_updates: {str(e)}')
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/get_weather')
 def get_weather():
@@ -332,7 +365,6 @@ def get_weather_description(weather_code):
         13: "Neige faible",
         14: "Neige modérée",
         15: "Neige forte",
-        # Ajoutez d'autres codes selon besoin
     }
     return weather_codes.get(weather_code, "Météo indéterminée")
 
@@ -353,12 +385,10 @@ def get_weather_icon(weather_code):
         13: "🌨️",
         14: "🌨️",
         15: "🌨️",
-        # Ajoutez d'autres codes selon besoin
     }
     return weather_icons.get(weather_code, "🌡️")
 
 if __name__ == '__main__':
     with app.app_context():
         initialize_database()
-    app.run(debug=True)
-    app.run(debug=True)
+    app.run(debug=True) 

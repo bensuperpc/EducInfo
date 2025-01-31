@@ -132,93 +132,105 @@
     </div>
 
     <script>
-        // Mise à jour de l'horloge avec formatage amélioré
-        function updateClock() {
-            const now = new Date();
-            const timeElement = document.getElementById('time');
-            const dateElement = document.getElementById('date');
-
-            // Format de l'heure HH:MM:SS
-            const time = now.toLocaleTimeString('fr-FR', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-
-            // Format de la date complète
-            const date = now.toLocaleDateString('fr-FR', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            });
-
-            timeElement.textContent = time;
-            dateElement.textContent = date.charAt(0).toUpperCase() + date.slice(1);
-        }
-
-        // Mise à jour météo avec gestion des icônes
-        async function updateWeather() {
-            try {
-                const response = await fetch('{{ url_for("get_weather") }}');
-                const data = await response.json();
+        class Dashboard {
+            constructor() {
+                this.clockElement = document.getElementById('time');
+                this.dateElement = document.getElementById('date');
+                this.weatherElement = document.getElementById('weather');
+                this.weatherIconElement = document.getElementById('weather-icon');
                 
-                if (data.error) {
-                    document.getElementById('weather').textContent = 'Météo indisponible';
-                    document.getElementById('weather-icon').textContent = '❓';
-                } else {
-                    const icon = getWeatherEmoji(data.description);
-                    document.getElementById('weather').textContent = `${data.temp}°C - ${data.description}`;
-                    document.getElementById('weather-icon').textContent = icon;
+                this.initializeUpdates();
+            }
+            
+            initializeUpdates() {
+                this.updateClock();
+                this.updateWeather();
+                
+                setInterval(() => this.updateClock(), 1000);
+                setInterval(() => this.updateWeather(), 60000);
+                
+                if (!window.location.pathname.includes('admin')) {
+                    this.initializeAutoRefresh();
                 }
-            } catch (error) {
-                console.error('Erreur météo:', error);
-                document.getElementById('weather').textContent = 'Erreur';
-                document.getElementById('weather-icon').textContent = '⚠️';
+            }
+            
+            updateClock() {
+                const now = new Date();
+                const time = now.toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                const date = now.toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+                
+                this.clockElement.textContent = time;
+                this.dateElement.textContent = date.charAt(0).toUpperCase() + date.slice(1);
+            }
+            
+            async updateWeather() {
+                try {
+                    const response = await fetch('{{ url_for("get_weather") }}');
+                    const data = await response.json();
+                    
+                    if (data.error) {
+                        this.setWeatherError('Météo indisponible');
+                        return;
+                    }
+                    
+                    const icon = this.getWeatherEmoji(data.description);
+                    this.weatherElement.textContent = `${data.temp}°C - ${data.description}`;
+                    this.weatherIconElement.textContent = icon;
+                } catch (error) {
+                    console.error('Erreur météo:', error);
+                    this.setWeatherError('Erreur de chargement');
+                }
+            }
+            
+            setWeatherError(message) {
+                this.weatherElement.textContent = message;
+                this.weatherIconElement.textContent = '⚠️';
+            }
+            
+            getWeatherEmoji(description) {
+                const weatherMap = {
+                    'ciel dégagé': '☀️',
+                    'peu nuageux': '🌤️',
+                    'partiellement nuageux': '⛅',
+                    'nuageux': '☁️',
+                    'couvert': '☁️',
+                    'brume': '🌫️',
+                    'brouillard': '🌫️',
+                    'pluie légère': '🌦️',
+                    'pluie': '🌧️',
+                    'forte pluie': '⛈️',
+                    'orage': '⛈️',
+                    'neige': '🌨️',
+                };
+                
+                const match = Object.keys(weatherMap).find(key => 
+                    description.toLowerCase().includes(key.toLowerCase())
+                );
+                
+                return match ? weatherMap[match] : '🌡️';
+            }
+            
+            initializeAutoRefresh() {
+                setInterval(() => {
+                    if (document.visibilityState === 'visible') {
+                        window.location.reload();
+                    }
+                }, 15000);
             }
         }
-
-        // Fonction pour déterminer l'émoji approprié
-        function getWeatherEmoji(description) {
-            const weatherMap = {
-                'ciel dégagé': '☀️',
-                'peu nuageux': '🌤️',
-                'partiellement nuageux': '⛅',
-                'nuageux': '☁️',
-                'couvert': '☁️',
-                'brume': '🌫️',
-                'brouillard': '🌫️',
-                'pluie légère': '🌦️',
-                'pluie': '🌧️',
-                'forte pluie': '⛈️',
-                'orage': '⛈️',
-                'neige': '🌨️',
-            };
-            
-            // Recherche par correspondance partielle
-            const match = Object.keys(weatherMap).find(key => 
-                description.toLowerCase().includes(key.toLowerCase())
-            );
-            
-            return match ? weatherMap[match] : '🌡️';
-        }
-
-        // Initialisation et intervalles de mise à jour
-        setInterval(updateClock, 1000);
-        setInterval(updateWeather, 60000); // Passe à 60s
-
-        // Première mise à jour
-        updateClock();
-        updateWeather();
-
-        // Rafraîchissement intelligent de la page
-        if (!window.location.pathname.includes('admin')) {
-            setInterval(() => {
-                if (document.visibilityState === 'visible') {
-                    window.location.reload();
-                }
-            }, 15000);
-        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            new Dashboard();
+        });
     </script>
 </body>
 </html>
