@@ -191,6 +191,69 @@
                         </div>
                     </div>
 
+                    <!-- Section Transport -->
+                    <div class="bg-white shadow sm:rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <h3 class="text-base font-semibold leading-6 text-gray-900">Configuration CTS</h3>
+                            <form method="POST" class="mt-4 space-y-4">
+                                {{ transport_form.hidden_tag() }}
+                                <div>
+                                    {{ transport_form.enabled(class="w-5 h-5 text-indigo-600") }}
+                                    {{ transport_form.enabled.label(class="ml-2 text-sm text-gray-700") }}
+                                </div>
+                                <div>
+                                    {{ transport_form.api_token.label(class="block text-sm font-medium text-gray-700") }}
+                                    {{ transport_form.api_token(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm") }}
+                                </div>
+                                <div>
+                                    {{ transport_form.show_in_banner(class="w-5 h-5 text-indigo-600") }}
+                                    {{ transport_form.show_in_banner.label(class="ml-2 text-sm text-gray-700") }}
+                                </div>
+                                {{ transport_form.submit_transport(class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700") }}
+                            </form>
+
+                            <!-- Gestion des arrêts -->
+                            <div class="mt-8 border-t pt-6">
+                                <h4 class="text-sm font-medium text-gray-900">Gestion des arrêts</h4>
+                                <form method="POST" class="mt-4 space-y-4">
+                                    {{ stop_form.hidden_tag() }}
+                                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                        <div>
+                                            {{ stop_form.code.label(class="block text-sm font-medium text-gray-700") }}
+                                            {{ stop_form.code(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm") }}
+                                        </div>
+                                        <div>
+                                            {{ stop_form.name.label(class="block text-sm font-medium text-gray-700") }}
+                                            {{ stop_form.name(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm") }}
+                                        </div>
+                                    </div>
+                                    {{ stop_form.submit_stop(class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700") }}
+                                </form>
+
+                                <!-- Liste des arrêts configurés -->
+                                <div class="mt-6">
+                                    <h5 class="text-sm font-medium text-gray-700">Arrêts configurés</h5>
+                                    <ul class="mt-3 divide-y divide-gray-100 border-t border-gray-200">
+                                        {% for stop in transport_config.stop_points %}
+                                        <li class="flex items-center justify-between py-3">
+                                            <div>
+                                                <p class="text-sm font-medium text-gray-900">{{ stop.name }}</p>
+                                                <p class="text-xs text-gray-500">Code: {{ stop.code }}</p>
+                                            </div>
+                                            <form method="POST" class="flex-none">
+                                                <input type="hidden" name="delete_stop" value="{{ loop.index0 }}">
+                                                <button type="submit" class="text-sm font-semibold text-red-600 hover:text-red-500">
+                                                    Supprimer
+                                                </button>
+                                            </form>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Section Mot de passe -->
                     <div class="bg-white shadow sm:rounded-lg">
                         <div class="px-4 py-5 sm:p-6">

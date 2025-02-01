@@ -5,8 +5,10 @@ from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from config import Config
 from extensions import db, csrf, login_manager, logger
-from models import User, Absence, WidgetConfig, Event, SiteConfig, WeatherConfig
-from forms import LoginForm, AbsenceForm, WidgetConfigForm, EventForm, ChangePasswordForm, SiteConfigForm, WeatherConfigForm
+from models import User, Absence, WidgetConfig, Event, SiteConfig, WeatherConfig, TransportConfig
+from forms import (LoginForm, AbsenceForm, WidgetConfigForm, EventForm, 
+                  ChangePasswordForm, SiteConfigForm, WeatherConfigForm, 
+                  TransportConfigForm, StopPointForm)  # Ajout de StopPointForm ici
 import requests
 
 # Initialize Flask app
@@ -43,6 +45,8 @@ def initialize_database():
                 db.session.add(SiteConfig())
             if not WidgetConfig.query.first():
                 db.session.add(WidgetConfig())
+            if not TransportConfig.query.first():  # Ajout de la config transport
+                db.session.add(TransportConfig())
                 
             db.session.commit()
             logger.info('Base de données initialisée avec succès')
@@ -71,7 +75,8 @@ def inject_config():
     return {
         'site_config': SiteConfig.get_config(),
         'weather_city': app.config['WEATHER_CITY'],
-        'current_datetime': datetime.now()
+        'current_datetime': datetime.now(),
+        'transport_config': TransportConfig.get_config()  # Ajout de cette ligne
     }
 
 @app.errorhandler(404)
@@ -87,27 +92,42 @@ def internal_error(error):
 @app.route('/')
 def home():
     try:
-        # Récupération des configurations avec gestion d'erreurs
-        config = WidgetConfig.query.first()
-        if not config:
-            config = WidgetConfig()
-            db.session.add(config)
-            db.session.commit()
-            
-        # Récupération des absences et événements
+        # Récupération des configurations
+        config = WidgetConfig.query.first() or WidgetConfig()
+        transport_config = TransportConfig.query.first() or TransportConfig()  # Ajout ici
+        
+        # Récupérer les informations de transport si activé
+        transport_stops = []
+        if transport_config and transport_config.enabled:
+            for stop in transport_config.stop_points:
+                info = get_cts_stop_info(stop['code'])
+                if info and 'MonitoredStopVisit' in info:
+                    passages = []
+                    for visit in info['MonitoredStopVisit']:
+                        journey = visit.get('MonitoredVehicleJourney', {})
+                        passages.append({
+                            'line': journey.get('PublishedLineName'),
+                            'destination': journey.get('DestinationName'),
+                            'time': journey.get('MonitoredCall', {}).get('ExpectedDepartureTime')
+                        })
+                    transport_stops.append({
+                        'name': stop['name'],
+                        'passages': passages
+                    })
+        
+        # Récupération des autres données
         absences = Absence.query.all()
         events = Event.get_upcoming_events()
         
-        # Vérification des données avant le rendu
-        logger.info(f'Chargement page d\'accueil: {len(absences)} absences, {len(events)} événements')
-        
         return render_template('home.html', 
-                             config=config, 
+                             config=config,
+                             transport_config=transport_config,  # Ajout ici
+                             transport_stops=transport_stops,    # Ajout ici
                              absences=absences, 
                              events=events)
+                             
     except Exception as e:
         logger.error(f'Erreur page d\'accueil: {str(e)}')
-        # Pour le développement, afficher l'erreur complète
         return f"Erreur : {str(e)}", 500
 
 @app.route('/login', methods=['GET','POST'])
@@ -139,15 +159,18 @@ def admin_dashboard():
         'password_form': ChangePasswordForm(),
         'site_form': SiteConfigForm(),
         'weather_form': WeatherConfigForm(),
-        'widget_form': WidgetConfigForm()
+        'widget_form': WidgetConfigForm(),
+        'transport_form': TransportConfigForm(),  # Ajout du formulaire transport
+        'stop_form': StopPointForm()
     }
     
     configs = {
         'widget': WidgetConfig.query.first() or WidgetConfig(),
         'site': SiteConfig.get_config(),
-        'weather': WeatherConfig.get_config()
+        'weather': WeatherConfig.get_config(),
+        'transport': TransportConfig.get_config()  # Ajout de la config transport
     }
-    
+
     # Pré-remplir les formulaires
     if not forms['widget_form'].is_submitted():
         forms['widget_form'] = WidgetConfigForm(obj=configs['widget'])
@@ -157,6 +180,8 @@ def admin_dashboard():
         forms['weather_form'].api_key.data = configs['weather'].api_key
         forms['weather_form'].city.data = configs['weather'].city
         forms['weather_form'].show_weather.data = configs['weather'].show_weather
+    if not forms['transport_form'].is_submitted():
+        forms['transport_form'] = TransportConfigForm(obj=configs['transport'])
 
     if request.method == 'POST':
         form_handlers = {
@@ -167,7 +192,10 @@ def admin_dashboard():
             'submit_event': handle_event_creation,
             'delete_event': handle_event_deletion,
             'submit_site': handle_site_config,
-            'submit_weather': handle_weather_config
+            'submit_weather': handle_weather_config,
+            'submit_transport': handle_transport_config,  # Ajout du handler transport
+            'submit_stop': handle_stop_point_add,
+            'delete_stop': handle_stop_point_delete
         }
 
         for action, handler in form_handlers.items():
@@ -177,6 +205,7 @@ def admin_dashboard():
     return render_template('admin_dashboard.html',
                          absences=Absence.query.all(),
                          widget_config=configs['widget'],
+                         transport_config=configs['transport'],  # Ajout de cette ligne
                          future_events=Event.get_upcoming_events(),
                          **forms)
 
@@ -281,6 +310,42 @@ def handle_site_config(request, forms, configs):
         site_config.site_name = forms['site_form'].site_name.data
         db.session.commit()
         flash('Nom de l\'établissement mis à jour', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+def handle_transport_config(request, forms, configs):
+    """Gère la configuration des transports"""
+    if forms['transport_form'].validate_on_submit():
+        transport_config = configs['transport']
+        transport_config.enabled = forms['transport_form'].enabled.data
+        transport_config.api_token = forms['transport_form'].api_token.data
+        transport_config.show_in_banner = forms['transport_form'].show_in_banner.data
+        db.session.commit()
+        flash('Configuration des transports mise à jour', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+def handle_stop_point_add(request, forms, configs):
+    """Gère l'ajout d'un arrêt"""
+    if forms['stop_form'].validate_on_submit():
+        transport_config = configs['transport']
+        new_stop = {
+            'code': forms['stop_form'].code.data,
+            'name': forms['stop_form'].name.data
+        }
+        if not transport_config.stop_points:
+            transport_config.stop_points = []
+        transport_config.stop_points.append(new_stop)
+        db.session.commit()
+        flash('Arrêt ajouté avec succès', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+def handle_stop_point_delete(request, forms, configs):
+    """Gère la suppression d'un arrêt"""
+    index = int(request.form.get('delete_stop'))
+    transport_config = configs['transport']
+    if 0 <= index < len(transport_config.stop_points):
+        transport_config.stop_points.pop(index)
+        db.session.commit()
+        flash('Arrêt supprimé', 'success')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/get_updates')
@@ -388,7 +453,68 @@ def get_weather_icon(weather_code):
     }
     return weather_icons.get(weather_code, "🌡️")
 
-if __name__ == '__main__':
-    with app.app_context():
-        initialize_database()
-    app.run(debug=True) 
+def get_cts_stop_info(stop_code):
+    """Obtient les informations de passage en temps réel pour un arrêt donné"""
+    config = TransportConfig.get_config()
+    if not config.enabled or not config.api_token:
+        return None
+        
+    headers = {'Authorization': f'Basic {config.api_token}'}
+    url = f"https://api.cts-strasbourg.eu/v1/siri/2.0/stop-monitoring"
+    
+    params = {
+        'MonitoringRef': stop_code,
+        'MaximumStopVisits': 3,
+        'MinimumStopVisitsPerLine': 1
+    }
+    
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get('ServiceDelivery', {}).get('StopMonitoringDelivery', [{}])[0]
+        return None
+    except Exception as e:
+        logger.error(f"Erreur CTS: {str(e)}")
+        return None
+
+@app.route('/get_transport_updates')
+def get_transport_updates():
+    """Endpoint API pour obtenir les mises à jour des transports"""
+    config = TransportConfig.get_config()
+    if not config.enabled:
+        return jsonify({'enabled': False})
+        
+    stops_data = []
+    for stop in config.stop_points:
+        info = get_cts_stop_info(stop['code'])
+        if info and 'MonitoredStopVisit' in info:
+            passages = []
+            for visit in info['MonitoredStopVisit']:
+                journey = visit.get('MonitoredVehicleJourney', {})
+                passages.append({
+                    'line': journey.get('PublishedLineName'),
+                    'destination': journey.get('DestinationName'),
+                    'time': journey.get('MonitoredCall', {}).get('ExpectedDepartureTime')
+                })
+            stops_data.append({
+                'name': stop['name'],
+                'passages': passages
+            })
+            
+    return jsonify({
+        'enabled': True,
+        'stops': stops_data
+    })
+
+@app.template_filter('formattime')
+def formattime_filter(value):
+    """Convertit une chaîne ISO en heure locale au format HH:MM"""
+    if not value:
+        return ""
+    try:
+        dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        return dt.strftime('%H:%M')
+    except Exception as e:
+        logger.error(f"Erreur formatage heure: {e}")
+        return value

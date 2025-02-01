@@ -90,3 +90,14 @@ class WeatherConfigForm(FlaskForm):
     ])
     show_weather = BooleanField('Afficher la météo')
     submit_weather = SubmitField('Mettre à jour la configuration météo')
+
+class TransportConfigForm(FlaskForm):
+    enabled = BooleanField('Activer l\'intégration CTS')
+    api_token = StringField('Token API CTS', validators=[Length(max=100)])
+    show_in_banner = BooleanField('Afficher les prochains passages dans la bannière')
+    submit_transport = SubmitField('Mettre à jour la configuration transport')
+
+class StopPointForm(FlaskForm):
+    code = StringField('Code arrêt', validators=[DataRequired()])
+    name = StringField('Nom de l\'arrêt', validators=[DataRequired()])
+    submit_stop = SubmitField('Ajouter un arrêt')

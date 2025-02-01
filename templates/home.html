@@ -107,6 +107,34 @@
         </div>
         {% endif %}
     </div>
+
+    <!-- Section Transport - À ajouter après la section des événements -->
+    {% if transport_config and transport_config.enabled %}
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-2xl font-bold mb-6 text-indigo-800 flex items-center">
+            <svg class="w-7 h-7 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            Transports CTS
+        </h3>
+        <div id="transport-info" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for stop in transport_stops %}
+            <div class="p-4 bg-gray-50 rounded-lg">
+                <h4 class="font-bold text-lg text-indigo-700">{{ stop.name }}</h4>
+                <div class="mt-2 space-y-2">
+                    {% for passage in stop.passages[:3] %}
+                    <div class="flex items-center space-x-3 text-sm">
+                        <span class="px-2 py-1 bg-indigo-100 rounded font-bold">{{ passage.line }}</span>
+                        <span>→ {{ passage.destination }}</span>
+                        <span class="font-mono">{{ passage.time }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Script de rafraîchissement automatique -->
@@ -115,5 +143,66 @@
     setTimeout(function() {
         window.location.reload();
     }, 5 * 60 * 1000);
+</script>
+
+<script>
+class TransportUpdater {
+    constructor() {
+        this.transportContainer = document.getElementById('transport-info');
+        if (this.transportContainer) {
+            this.initializeUpdates();
+        }
+    }
+    
+    initializeUpdates() {
+        this.updateTransport();
+        setInterval(() => this.updateTransport(), 60000); // Mise à jour toutes les minutes
+    }
+    
+    async updateTransport() {
+        try {
+            const response = await fetch('/get_transport_updates');
+            const data = await response.json();
+            
+            if (!data.enabled) return;
+            
+            let html = '';
+            for (const stop of data.stops) {
+                html += `
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h4 class="font-bold text-lg text-indigo-700">${stop.name}</h4>
+                        <div class="mt-2 space-y-2">
+                            ${this.renderPassages(stop.passages)}
+                        </div>
+                    </div>
+                `;
+            }
+            this.transportContainer.innerHTML = html;
+        } catch (error) {
+            console.error('Erreur transport:', error);
+        }
+    }
+    
+    renderPassages(passages) {
+        return passages.map(p => `
+            <div class="flex items-center space-x-3 text-sm">
+                <span class="px-2 py-1 bg-indigo-100 rounded font-bold">${p.line}</span>
+                <span>→ ${p.destination}</span>
+                <span class="font-mono">${this.formatTime(p.time)}</span>
+            </div>
+        `).join('');
+    }
+    
+    formatTime(isoTime) {
+        return new Date(isoTime).toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    new TransportUpdater();
+});
 </script>
 {% endblock %}

@@ -111,3 +111,19 @@ class Event(db.Model):
             Event.date >= date.today(),
             Event.date <= future_date
         ).order_by(Event.date).all()
+
+class TransportConfig(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    enabled = db.Column(db.Boolean, default=False)
+    api_token = db.Column(db.String(100), nullable=True)
+    stop_points = db.Column(db.JSON, default=list)  # Liste des arrêts à surveiller
+    show_in_banner = db.Column(db.Boolean, default=False)  # Afficher dans la bannière du bas
+    
+    @staticmethod
+    def get_config():
+        config = TransportConfig.query.first()
+        if not config:
+            config = TransportConfig()
+            db.session.add(config)
+            db.session.commit()
+        return config
