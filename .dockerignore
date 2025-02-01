@@ -1,0 +1,5 @@
+.github/*
+debian/*
+Makefile
+README.md
+DockerImages.mk

@@ -1,7 +1,7 @@
-# EducInfo 
+# EducInfo
 Ancinnement : Espace d'information pour le Lycée Couffignal à Strasbourg
 
-<h4>⚠️ Ce projet est en cours de reprise. Il peut avoir des dysfonctionnements dans ses premières versions
+**Ce projet est en cours de reprise. Il peut avoir des dysfonctionnements dans ses premières versions**
 
 ## Quel est le but de ce projet ?
 Proposer une solution pour afficher des informations comme les absences, le menu de cantine, etc ... aux élèves facilement
@@ -21,19 +21,25 @@ Proposer une solution pour afficher des informations comme les absences, le menu
 ## Installation
 
 1. **Cloner le dépôt** :
-   ```bash
-   git clone https://github.com/Doalou/EducInfo.git
-   cd EducInfo
+
+```bash
+  git clone https://github.com/Doalou/EducInfo.git
+  cd EducInfo
+```
 
 2. **Installer les dépendances** :
 
-    pip install -r requirements.txt
+```bash
+pip install -r requirements.txt
+```
 
 3. **Initialiser la base de données** :
 
-    Lors du premier lancement, l’appli créera le fichier educinfo.db et un utilisateur admin par défaut (admin@educinfo.com / admin123).
-    Vous pouvez modifier ce comportement dans app.py (fonction create_tables).
+Lors du premier lancement, l’appli créera le fichier educinfo.db et un utilisateur admin par défaut (admin@educinfo.com / admin123).
+Vous pouvez modifier ce comportement dans app.py (fonction create_tables).
 
 4. **Lancer l'application** :
 
-    python app.py
+```bash
+python app.py
+```
