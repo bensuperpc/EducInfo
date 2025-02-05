@@ -10,9 +10,8 @@
 
     <main class="py-8">
         <div class="mx-auto max-w-7xl gap-6 sm:px-6 lg:px-8">
-            <!-- Menu principal -->
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <!-- Panneau de gauche -->
+                <!-- Panneau de gauche : Gestion des absences et événements -->
                 <div class="space-y-6">
                     <!-- Section Absences -->
                     <div class="bg-white shadow sm:rounded-lg">
@@ -127,13 +126,11 @@
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Panneau de droite -->
-                <div class="space-y-6">
-                    <!-- Section Configuration -->
-                    <div class="bg-white shadow sm:rounded-lg">
+                    <!-- Section Mot de Passe (maintenant après les événements) -->
+                    <div class="bg-white shadow sm:rounded-lg mt-6">
                         <div class="px-4 py-5 sm:p-6">
+<<<<<<< Updated upstream
                             <h3 class="text-base font-semibold leading-6 text-gray-900">Configuration de l'établissement</h3>
                             <form method="POST" class="mt-4 space-y-4">
                                 {{ site_form.hidden_tag() }}
@@ -258,6 +255,9 @@
                     <div class="bg-white shadow sm:rounded-lg">
                         <div class="px-4 py-5 sm:p-6">
                             <h3 class="text-base font-semibold leading-6 text-gray-900">Modification du mot de passe</h3>
+=======
+                            <h3 class="text-base font-semibold leading-6 text-gray-900">Paramètres du compte</h3>
+>>>>>>> Stashed changes
                             <form method="POST" class="mt-4 space-y-4">
                                 {{ password_form.hidden_tag() }}
                                 <div>
@@ -275,6 +275,121 @@
                                 {{ password_form.submit_password(class="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2") }}
                             </form>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Panneau de droite : Configuration Site, Widgets, Météo et Mot de passe -->
+                <div class="space-y-6">
+                    <!-- Section Configuration du Site -->
+                    <div class="bg-white shadow sm:rounded-lg p-6">
+                        <h3 class="text-base font-semibold leading-6 text-gray-900">Configuration de l'établissement</h3>
+                        <form method="POST" class="mt-4 space-y-4">
+                            {{ site_form.hidden_tag() }}
+                            <div>
+                                {{ site_form.site_name.label(class="block text-sm font-medium text-gray-700") }}
+                                {{ site_form.site_name(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm") }}
+                            </div>
+                            {{ site_form.submit_site(class="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2") }}
+                        </form>
+                    </div>
+                    
+                    <!-- Remplacer la section Configuration des Widgets par : -->
+                    <div class="bg-white shadow sm:rounded-lg p-6">
+                        <h3 class="text-base font-semibold leading-6 text-gray-900">Configuration des widgets</h3>
+                        <form method="POST" class="mt-4 space-y-6">
+                            {{ widget_form.hidden_tag() }}
+                            
+                            <!-- Configuration Menu Cantine -->
+                            <div class="border-b border-gray-200 pb-6">
+                                <div class="flex items-center space-x-3">
+                                    {{ widget_form.show_menu_cantine(class="w-5 h-5 text-indigo-600") }}
+                                    {{ widget_form.show_menu_cantine.label(class="text-gray-700") }}
+                                </div>
+                                <div class="mt-4 space-y-4">
+                                    <div class="flex items-center space-x-4 p-4 bg-green-50 rounded-lg">
+                                        <span class="text-2xl">🥗</span>
+                                        <div class="flex-1">
+                                            {{ widget_form.menu_entree.label(class="block text-sm font-medium text-green-800") }}
+                                            {{ widget_form.menu_entree(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500") }}
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center space-x-4 p-4 bg-red-50 rounded-lg">
+                                        <span class="text-2xl">🍲</span>
+                                        <div class="flex-1">
+                                            {{ widget_form.menu_plat.label(class="block text-sm font-medium text-red-800") }}
+                                            {{ widget_form.menu_plat(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500") }}
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center space-x-4 p-4 bg-yellow-50 rounded-lg">
+                                        <span class="text-2xl">🍰</span>
+                                        <div class="flex-1">
+                                            {{ widget_form.menu_dessert.label(class="block text-sm font-medium text-yellow-800") }}
+                                            {{ widget_form.menu_dessert(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500") }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Configuration CTS -->
+                            <div class="pt-6">
+                                <h4 class="text-lg font-medium text-gray-900 mb-4">Configuration du widget CTS</h4>
+                                <div class="space-y-4">
+                                    <div class="flex items-center space-x-3">
+                                        {{ widget_form.show_transports(class="w-5 h-5 text-indigo-600") }}
+                                        {{ widget_form.show_transports.label(class="text-gray-700") }}
+                                    </div>
+                                    
+                                    <div>
+                                        {{ widget_form.cts_api_token.label(class="block text-sm font-medium text-gray-700") }}
+                                        {{ widget_form.cts_api_token(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm") }}
+                                        <p class="mt-1 text-sm text-gray-500">Clé d'authentification pour l'API CTS</p>
+                                    </div>
+
+                                    <div>
+                                        {{ widget_form.cts_stop_code.label(class="block text-sm font-medium text-gray-700") }}
+                                        {{ widget_form.cts_stop_code(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm") }}
+                                        <p class="mt-1 text-sm text-gray-500">Code de l'arrêt (ex: 212)</p>
+                                    </div>
+
+                                    <div>
+                                        {{ widget_form.cts_vehicle_mode.label(class="block text-sm font-medium text-gray-700") }}
+                                        {{ widget_form.cts_vehicle_mode(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm") }}
+                                    </div>
+                                    
+                                    <div>
+                                        {{ widget_form.cts_stop_name.label(class="block text-sm font-medium text-gray-700") }}
+                                        {{ widget_form.cts_stop_name(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm") }}
+                                        <p class="mt-1 text-sm text-gray-500">Nom personnalisé qui apparaîtra sur l'affichage (optionnel)</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{ widget_form.submit_widget(class="mt-6 w-full bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700") }}
+                        </form>
+                    </div>
+                    
+                    <!-- Section Configuration Météo -->
+                    <div class="bg-white shadow sm:rounded-lg p-6">
+                        <h3 class="text-base font-semibold leading-6 text-gray-900">Configuration Météo</h3>
+                        <form method="POST" class="mt-4 space-y-4">
+                            {{ weather_form.hidden_tag() }}
+                            <div>
+                                {{ weather_form.api_key.label(class="block text-sm font-medium text-gray-700") }}
+                                {{ weather_form.api_key(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm") }}
+                                <p class="mt-1 text-sm text-gray-500">Obtenir une clé sur <a href="https://openweathermap.org/api" target="_blank" class="text-indigo-600 hover:text-indigo-800">OpenWeatherMap</a></p>
+                            </div>
+                            <div>
+                                {{ weather_form.city.label(class="block text-sm font-medium text-gray-700") }}
+                                {{ weather_form.city(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm") }}
+                            </div>
+                            <div>
+                                {{ weather_form.show_weather(class="w-5 h-5 text-indigo-600") }}
+                                {{ weather_form.show_weather.label(class="ml-2 text-sm text-gray-700") }}
+                            </div>
+                            {{ weather_form.submit_weather(class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700") }}
+                        </form>
                     </div>
                 </div>
             </div>

@@ -1,14 +1,15 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="grid grid-cols-1 gap-8 p-4">
-    <!-- Bandeau d'absences principal -->
-    <div class="bg-white rounded-xl shadow-lg p-6">
-        <h2 class="text-3xl font-bold mb-6 text-indigo-800 flex items-center">
-            <svg class="w-8 h-8 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<div class="p-2 space-y-4">
+    <!-- Bandeau d'absences -->
+    <div class="bg-white rounded-lg shadow p-3">
+        <h2 class="text-lg font-bold mb-2 text-indigo-800 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             Absences des Professeurs
         </h2>
+        <!-- Table des absences sans limite de hauteur -->
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 text-lg">
                 <thead class="bg-indigo-50">
@@ -65,49 +66,80 @@
         </div>
     </div>
 
-    <!-- Section Événements et Widgets -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Événements à venir -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <h3 class="text-2xl font-bold mb-6 text-indigo-800 flex items-center">
-                <svg class="w-7 h-7 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                Événements à venir
-            </h3>
-            {% if events %}
-                <div class="space-y-4">
-                    {% for evt in events %}
-                        <div class="p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
-                            <h4 class="text-xl font-bold text-indigo-800">{{ evt.title }}</h4>
-                            <div class="text-lg text-indigo-600 mt-2">{{ evt.date.strftime('%d/%m/%Y') }}</div>
-                            {% if evt.description %}
-                                <p class="text-lg text-gray-700 mt-2">{{ evt.description }}</p>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="text-xl text-gray-500 italic">Aucun événement prévu</p>
-            {% endif %}
-        </div>
-
-        <!-- Menu de la cantine si activé -->
+    <!-- Section Événements et Menu -->
+    <div class="grid grid-cols-2 gap-4">
+        <!-- Menu de la cantine -->
         {% if config.show_menu_cantine %}
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <h3 class="text-2xl font-bold mb-6 text-indigo-800 flex items-center">
-                <svg class="w-7 h-7 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-xl font-bold mb-3 text-indigo-800 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
-                Menu de la Cantine
+                Menu du Jour
             </h3>
-            <div class="text-lg prose max-w-none">
-                {{ config.menu_cantine|safe }}
+            <div class="space-y-2">
+                {% if config.menu_entree %}
+                <div class="flex items-center bg-gradient-to-r from-green-50 to-green-100 rounded p-2 border border-green-200">
+                    <span class="text-xl mr-2">🥗</span>
+                    <div class="flex-1">
+                        <span class="text-sm font-medium text-green-800">Entrée :</span>
+                        <span class="text-green-700 ml-1">{{ config.menu_entree }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if config.menu_plat %}
+                <div class="flex items-center bg-gradient-to-r from-red-50 to-red-100 rounded p-2 border border-red-200">
+                    <span class="text-xl mr-2">🍲</span>
+                    <div class="flex-1">
+                        <span class="text-sm font-medium text-red-800">Plat :</span>
+                        <span class="text-red-700 ml-1">{{ config.menu_plat }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if config.menu_dessert %}
+                <div class="flex items-center bg-gradient-to-r from-yellow-50 to-yellow-100 rounded p-2 border border-yellow-200">
+                    <span class="text-xl mr-2">🍰</span>
+                    <div class="flex-1">
+                        <span class="text-sm font-medium text-yellow-800">Dessert :</span>
+                        <span class="text-yellow-700 ml-1">{{ config.menu_dessert }}</span>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
         {% endif %}
+
+        <!-- Événements -->
+        <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-xl font-bold mb-3 text-indigo-800 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Événements
+            </h3>
+            <div class="space-y-2">
+                {% if events %}
+                    {% for evt in events %}
+                        <div class="p-2 bg-indigo-50 rounded hover:bg-indigo-100 transition-colors">
+                            <div class="flex items-center justify-between">
+                                <span class="font-medium text-indigo-800">{{ evt.title }}</span>
+                                <span class="text-sm text-indigo-600">{{ evt.date.strftime('%d/%m/%Y') }}</span>
+                            </div>
+                            {% if evt.description %}
+                                <p class="text-sm text-gray-600 mt-1">{{ evt.description }}</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-gray-500 italic text-sm">Aucun événement prévu</p>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
+<<<<<<< Updated upstream
     <!-- Section Transport - À ajouter après la section des événements -->
     {% if transport_config and transport_config.enabled %}
     <div class="bg-white rounded-xl shadow-lg p-6">
@@ -132,18 +164,128 @@
                 </div>
             </div>
             {% endfor %}
+=======
+    <!-- Section Widget Transports -->
+    {% if config.show_transports and config.cts_stop_code %}
+    <div class="bg-white rounded-lg shadow p-4">
+        <h2 class="text-xl font-bold mb-3 text-indigo-800 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+            </svg>
+            {% if config.cts_stop_name %}
+                {{ config.cts_stop_name }}
+            {% else %}
+                Horaires CTS - Arrêt {{ config.cts_stop_code }}
+            {% endif %}
+        </h2>
+        <!-- Plus de limite de hauteur pour les horaires -->
+        <div class="overflow-x-auto">
+            <table class="min-w-full table-auto border-collapse">
+                <thead class="bg-indigo-50">
+                    <tr>
+                        <th class="px-3 py-2 text-left text-indigo-800">Ligne</th>
+                        <th class="px-3 py-2 text-left text-indigo-800">Destination</th>
+                        <th class="px-3 py-2 text-center text-indigo-800">Horaire</th>
+                        <th class="px-3 py-2 text-center text-indigo-800">Type</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for arrival in cts_arrivals %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-3 py-2 font-semibold">{{ arrival.line }}</td>
+                        <td class="px-3 py-2">{{ arrival.destination }}</td>
+                        <td class="px-3 py-2 text-center">
+                            <span class="px-2 py-1 rounded-full {% if arrival.is_real_time %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ arrival.arrival_time }}
+                            </span>
+                        </td>
+                        <td class="px-3 py-2 text-center text-gray-600">
+                            {{ arrival.vehicle_mode|title }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+>>>>>>> Stashed changes
         </div>
     </div>
     {% endif %}
 </div>
 
-<!-- Script de rafraîchissement automatique -->
 <script>
-    // Rafraîchir la page toutes les 5 minutes
+    // Rafraîchissement automatique toutes les 5 minutes
     setTimeout(function() {
         window.location.reload();
     }, 5 * 60 * 1000);
+
+    // Configuration de l'autoscroll
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fonction pour l'autoscroll
+        function autoScroll(element, duration = 30000) {
+            if (!element) return;
+            
+            const scrollHeight = element.scrollHeight;
+            const clientHeight = element.clientHeight;
+            
+            if (scrollHeight <= clientHeight) return;
+
+            let startTime = null;
+            let currentPosition = 0;
+            let direction = 1; // 1 = down, -1 = up
+
+            function scroll(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = timestamp - startTime;
+
+                if (progress >= duration) {
+                    startTime = timestamp;
+                    direction *= -1; // Change direction
+                    currentPosition = direction > 0 ? 0 : scrollHeight - clientHeight;
+                }
+
+                const percentage = (progress / duration);
+                if (direction > 0) {
+                    currentPosition = percentage * (scrollHeight - clientHeight);
+                } else {
+                    currentPosition = (scrollHeight - clientHeight) - (percentage * (scrollHeight - clientHeight));
+                }
+
+                element.scrollTop = currentPosition;
+                requestAnimationFrame(scroll);
+            }
+
+            requestAnimationFrame(scroll);
+        }
+
+        // Configuration des éléments à autoscroll
+        const absencesTable = document.querySelector('.overflow-x-auto');
+        const eventsContainer = document.querySelector('.space-y-2');
+
+        // Démarrer l'autoscroll avec des délais différents
+        if (absencesTable) {
+            setTimeout(() => autoScroll(absencesTable, 20000), 1000); // Commence après 1s, cycle de 20s
+        }
+        if (eventsContainer) {
+            setTimeout(() => autoScroll(eventsContainer, 15000), 2000); // Commence après 2s, cycle de 15s
+        }
+
+        // Pause l'autoscroll au survol
+        [absencesTable, eventsContainer].forEach(element => {
+            if (!element) return;
+            
+            element.addEventListener('mouseenter', function() {
+                this.style.overflowY = 'auto';
+                this.style.scrollBehavior = 'auto';
+            });
+
+            element.addEventListener('mouseleave', function() {
+                this.style.overflowY = 'hidden';
+                this.style.scrollBehavior = 'smooth';
+            });
+        });
+    });
 </script>
+<<<<<<< Updated upstream
 
 <script>
 class TransportUpdater {
@@ -206,3 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 {% endblock %}
+=======
+{% endblock %}
+>>>>>>> Stashed changes

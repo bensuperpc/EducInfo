@@ -12,11 +12,9 @@ csrf = CSRFProtect()
 login_manager = LoginManager()
 login_manager.login_view = 'login'
 
-# Créer le dossier logs s'il n'existe pas
 if not os.path.exists('logs'):
     os.makedirs('logs')
 
-# Configure logging
 handler = RotatingFileHandler('logs/educinfo.log', maxBytes=10000, backupCount=3)
 handler.setFormatter(logging.Formatter(
     '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
