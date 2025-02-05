@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from extensions import db
 
 class User(UserMixin, db.Model):
-    __tablename__ = 'users'  # Spécifier explicitement le nom de la table
+    __tablename__ = 'users'
     
     id = db.Column(db.Integer, primary_key=True)
     identifiant = db.Column(db.String(120), unique=True, nullable=False)
@@ -40,28 +40,18 @@ class Absence(db.Model):
 class WidgetConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     show_menu_cantine = db.Column(db.Boolean, default=False)
-    menu_cantine = db.Column(db.Text, default="Menu non configuré")
-    
+    menu_entree = db.Column(db.String(200), default="")
+    menu_plat = db.Column(db.String(200), default="")
+    menu_dessert = db.Column(db.String(200), default="")
+    show_transports = db.Column(db.Boolean, default=False)
+    cts_stop_code = db.Column(db.String(20))
+    cts_vehicle_mode = db.Column(db.String(20), default="undefined")
+    cts_api_token = db.Column(db.String(64))
+    cts_stop_name = db.Column(db.String(100))  # Nouveau champ pour le nom personnalisé
+
     @staticmethod
     def get_config():
         return WidgetConfig.query.first() or WidgetConfig()
-
-class ThemeConfig(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    primary_color = db.Column(db.String(20), default='indigo')
-    
-    @staticmethod
-    def get_color_choices():
-        return [
-            ('indigo', 'Violet'),
-            ('blue', 'Bleu'),
-            ('green', 'Vert'),
-            ('red', 'Rouge'),
-            ('purple', 'Pourpre'),
-            ('pink', 'Rose'),
-            ('yellow', 'Jaune'),
-            ('orange', 'Orange')
-        ]
 
 class SiteConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -100,14 +90,32 @@ class Event(db.Model):
     title = db.Column(db.String(200), nullable=False)
     date = db.Column(db.Date, nullable=False)
     description = db.Column(db.Text, default="")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Ajout d'un timestamp de création
 
     def is_future(self):
         return self.date >= date.today()
 
     @staticmethod
     def get_upcoming_events(days=30):
-        future_date = date.today() + timedelta(days=days)
+        today = date.today()
+        future_date = today + timedelta(days=days)
         return Event.query.filter(
-            Event.date >= date.today(),
+            Event.date >= today,
             Event.date <= future_date
         ).order_by(Event.date).all()
+
+class TransportConfig(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    enabled = db.Column(db.Boolean, default=False)
+    api_token = db.Column(db.String(100), nullable=True)
+    stop_points = db.Column(db.JSON, default=list)  # Liste des arrêts à surveiller
+    show_in_banner = db.Column(db.Boolean, default=False)  # Afficher dans la bannière du bas
+    
+    @staticmethod
+    def get_config():
+        config = TransportConfig.query.first()
+        if not config:
+            config = TransportConfig()
+            db.session.add(config)
+            db.session.commit()
+        return config

@@ -3,7 +3,6 @@ from wtforms import StringField, PasswordField, BooleanField, TextAreaField, Dat
 from wtforms.fields import SelectMultipleField
 from wtforms.validators import DataRequired, Length, ValidationError, Regexp, EqualTo
 from datetime import date
-from models import ThemeConfig
 
 class LoginForm(FlaskForm):
     identifiant = StringField('Identifiant', validators=[
@@ -34,23 +33,38 @@ class AbsenceForm(FlaskForm):
             raise ValidationError('Le nom du professeur doit contenir au moins 2 caractères')
 
 class WidgetConfigForm(FlaskForm):
-    # show_weather = BooleanField('Afficher la météo (barre du bas)')
     show_menu_cantine = BooleanField('Afficher le menu de la cantine')
+    menu_entree = StringField('Entrée du jour', 
+                            render_kw={"placeholder": "Ex: Salade César"})
+    menu_plat = StringField('Plat principal',
+                          render_kw={"placeholder": "Ex: Poulet rôti et pommes de terre"})
+    menu_dessert = StringField('Dessert',
+                             render_kw={"placeholder": "Ex: Tarte aux pommes"})
     menu_cantine = TextAreaField('Menu de la cantine')
-    submit_widget = SubmitField('Enregistrer')
+    show_transports = BooleanField('Afficher le widget de transports')
+    cts_api_token = StringField('Clé API CTS', validators=[Length(min=32, max=64)])
+    cts_stop_code = StringField("Code d'arrêt CTS")
+    cts_vehicle_mode = SelectField("Mode de transport",
+                                 choices=[("bus", "Bus"), ("tram", "Tram"), ("undefined", "Tous")],
+                                 default="undefined")
+    cts_stop_name = StringField("Nom d'affichage de l'arrêt", render_kw={"placeholder": "Ex: Arrêt Lycée"})
+    submit_widget = SubmitField('Enregistrer la configuration')
 
 class EventForm(FlaskForm):
     title = StringField('Titre', validators=[
-        DataRequired(),
-        Length(min=3, max=200)
+        DataRequired(message="Le titre est requis"),
+        Length(min=3, max=200, message="Le titre doit contenir entre 3 et 200 caractères")
     ])
-    date = DateField('Date', validators=[DataRequired()])
+    date = DateField('Date', validators=[DataRequired(message="La date est requise")])
     description = TextAreaField('Description')
-    submit_event = SubmitField('Ajouter l\'Événement')
+    submit_event = SubmitField('Ajouter l\'événement')
     
     def validate_date(self, field):
-        if field.data < date.today():
-            raise ValidationError('La date doit être future')
+        try:
+            if field.data < date.today():
+                raise ValidationError('La date doit être dans le futur')
+        except (TypeError, ValueError):
+            raise ValidationError('Format de date invalide')
 
 class ChangePasswordForm(FlaskForm):
     current_password = PasswordField('Mot de passe actuel', validators=[DataRequired()])
@@ -65,12 +79,6 @@ class ChangePasswordForm(FlaskForm):
         EqualTo('new_password', message='Les mots de passe doivent correspondre')
     ])
     submit_password = SubmitField('Changer le mot de passe')
-
-class ThemeConfigForm(FlaskForm):
-    primary_color = SelectField('Couleur principale', 
-                              choices=ThemeConfig.get_color_choices(),
-                              validators=[DataRequired()])
-    submit_theme = SubmitField('Enregistrer')
 
 class SiteConfigForm(FlaskForm):
     site_name = StringField('Nom de l\'établissement', validators=[
@@ -89,4 +97,19 @@ class WeatherConfigForm(FlaskForm):
         Length(min=2, max=100, message="Le nom de la ville doit faire entre 2 et 100 caractères")
     ])
     show_weather = BooleanField('Afficher la météo')
+<<<<<<< Updated upstream
     submit_weather = SubmitField('Mettre à jour la configuration météo')
+
+class TransportConfigForm(FlaskForm):
+    enabled = BooleanField('Activer l\'intégration CTS')
+    api_token = StringField('Token API CTS', validators=[Length(max=100)])
+    show_in_banner = BooleanField('Afficher les prochains passages dans la bannière')
+    submit_transport = SubmitField('Mettre à jour la configuration transport')
+
+class StopPointForm(FlaskForm):
+    code = StringField('Code arrêt', validators=[DataRequired()])
+    name = StringField('Nom de l\'arrêt', validators=[DataRequired()])
+    submit_stop = SubmitField('Ajouter un arrêt')
+=======
+    submit_weather = SubmitField('Mettre à jour la configuration météo')
+>>>>>>> Stashed changes
