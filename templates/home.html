@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="grid grid-cols-1 gap-4 p-4 max-w-[1920px] mx-auto">
+    <!-- Carte des absences -->
+    <div class="bg-gradient-to-br from-rose-50 to-white rounded-lg shadow p-4">
+        <h2 class="text-2xl font-bold mb-4 text-rose-800 flex items-center">
+            <span class="text-4xl mr-3">👩‍🏫</span> Absences de la Semaine
+        </h2>
+        
+        {% if absences %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-lg overflow-hidden">
+                    <thead class="bg-rose-100">
+                        <tr>
+                            <th class="py-3 px-4 text-left font-bold text-rose-900">Lundi</th>
+                            <th class="py-3 px-4 text-left font-bold text-rose-900">Mardi</th>
+                            <th class="py-3 px-4 text-left font-bold text-rose-900">Mercredi</th>
+                            <th class="py-3 px-4 text-left font-bold text-rose-900">Jeudi</th>
+                            <th class="py-3 px-4 text-left font-bold text-rose-900">Vendredi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="py-2 px-4 border-t">
+                                <div class="space-y-1">
+                                    {% for absence in absences %}
+                                        {% if absence.lundi %}
+                                            <div class="bg-rose-50 text-rose-800 px-2 py-1 rounded">
+                                                {{ absence.professeur }}
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="py-2 px-4 border-t">
+                                <div class="space-y-1">
+                                    {% for absence in absences %}
+                                        {% if absence.mardi %}
+                                            <div class="bg-rose-50 text-rose-800 px-2 py-1 rounded">
+                                                {{ absence.professeur }}
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="py-2 px-4 border-t">
+                                <div class="space-y-1">
+                                    {% for absence in absences %}
+                                        {% if absence.mercredi %}
+                                            <div class="bg-rose-50 text-rose-800 px-2 py-1 rounded">
+                                                {{ absence.professeur }}
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="py-2 px-4 border-t">
+                                <div class="space-y-1">
+                                    {% for absence in absences %}
+                                        {% if absence.jeudi %}
+                                            <div class="bg-rose-50 text-rose-800 px-2 py-1 rounded">
+                                                {{ absence.professeur }}
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="py-2 px-4 border-t">
+                                <div class="space-y-1">
+                                    {% for absence in absences %}
+                                        {% if absence.vendredi %}
+                                            <div class="bg-rose-50 text-rose-800 px-2 py-1 rounded">
+                                                {{ absence.professeur }}
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-8 text-gray-500 bg-white rounded-lg">
+                <span class="text-4xl block mb-4">🎉</span>
+                Aucune absence cette semaine
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Section Widgets -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Événements -->
+        <div class="bg-gradient-to-br from-emerald-50 to-white rounded-lg shadow p-4">
+            <h2 class="text-xl font-bold mb-3 text-emerald-800 flex items-center">
+                <span class="text-3xl mr-3">📅</span> Prochains Événements
+            </h2>
+            {% if events %}
+                <div class="space-y-2">
+                    {% for evt in events %}
+                        <div class="bg-white p-3 rounded shadow">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h3 class="text-lg font-bold text-emerald-900">{{ evt.title }}</h3>
+                                    <time class="text-emerald-600 text-sm block mt-1">
+                                        {{ evt.date.strftime('%d/%m/%Y') }}
+                                    </time>
+                                    {% if evt.description %}
+                                        <p class="text-gray-600 mt-2">{{ evt.description }}</p>
+                                    {% endif %}
+                                </div>
+                                <span class="text-2xl">🗓️</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8 text-gray-500 bg-white rounded-lg">
+                    <span class="text-4xl block mb-4">📆</span>
+                    Aucun événement prévu
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Menu Cantine -->
+        {% if config.show_menu_cantine %}
+        <div class="bg-gradient-to-br from-amber-50 to-white rounded-lg shadow p-4">
+            <h2 class="text-xl font-bold mb-3 text-amber-800 flex items-center">
+                <span class="text-3xl mr-3">🍽️</span> Menu du Jour
+            </h2>
+            
+            {% if menu_items %}
+                <div class="grid gap-3">
+                    {% for cat_id, cat_name, cat_icon in [
+                        ('entree', 'Entrées', '🥗'),
+                        ('plat', 'Plats', '🍽️'),
+                        ('accompagnement', 'Accompagnements', '🥔'),
+                        ('fromage', 'Fromages', '🧀'),
+                        ('dessert', 'Desserts', '🍰')
+                    ] %}
+                        {% set items = menu_items|selectattr('category', 'equalto', cat_id)|list %}
+                        {% if items %}
+                            <div class="space-y-2">
+                                <h3 class="text-lg font-bold text-amber-900 flex items-center">
+                                    <span class="text-2xl mr-2">{{ cat_icon }}</span>
+                                    {{ cat_name }}
+                                </h3>
+                                <div class="grid gap-2">
+                                    {% for item in items %}
+                                        <div class="bg-white p-3 rounded-lg shadow-sm hover:shadow transition-shadow">
+                                            <div class="flex items-center justify-between">
+                                                <span class="font-medium text-gray-900">{{ item.name }}</span>
+                                                <span class="text-lg">{{ item.icons or '' }}</span>
+                                            </div>
+                                            {% if item.description %}
+                                                <p class="text-sm text-amber-600 mt-1">{{ item.description }}</p>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Légende des icônes -->
+                    <div class="mt-6 pt-4 border-t border-amber-200">
+                        <div class="flex flex-wrap gap-2">
+                            {% for icon, label in [
+                                ('🌱', 'Végétarien'),
+                                ('🌾', 'Sans Gluten'),
+                                ('🥜', 'Allergènes'),
+                                ('🥛', 'Produits laitiers'),
+                                ('🥩', 'Viande'),
+                                ('🐟', 'Poisson'),
+                                ('🌶️', 'Épicé')
+                            ] %}
+                                <span class="inline-flex items-center bg-white px-2 py-1 rounded-full text-sm shadow-sm">
+                                    <span class="mr-1">{{ icon }}</span> {{ label }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <span class="text-4xl block mb-4">📋</span>
+                    Menu non disponible pour aujourd'hui
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Widget Transports (toujours en pleine largeur en dessous) -->
+    {% if config.has_valid_transport_config() %}
+    <div class="mt-4">
+        <div class="bg-gradient-to-br from-blue-50 to-white rounded-lg shadow p-4">
+            <h2 class="text-xl font-bold mb-3 text-blue-800 flex items-center">
+                <span class="text-3xl mr-3">🚌</span> 
+                Prochains Passages
+                <span class="ml-2 text-sm font-normal text-blue-600">Arrêt {{ config.cts_stop_code }}</span>
+            </h2>
+
+            {% if cts_arrivals %}
+                <div class="grid gap-3 md:grid-cols-3 lg:grid-cols-4">
+                    {% for visit in cts_arrivals %}
+                        {% set journey = visit.MonitoredVehicleJourney %}
+                        <div class="bg-white rounded p-3 shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-2xl font-bold text-blue-600">
+                                    {% if journey.VehicleMode == 'bus' %}🚌{% else %}🚊{% endif %}
+                                    {{ journey.PublishedLineName }}
+                                </span>
+                            </div>
+                            <div class="text-gray-600">→ {{ journey.DestinationName if journey.DestinationName is string else journey.DestinationName|join(', ') }}</div>
+                            {% if journey.MonitoredCall %}
+                                <div class="mt-2 text-right">
+                                    <span class="arrival-time inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-medium" 
+                                          data-time="{{ journey.MonitoredCall.ExpectedArrivalTime }}">
+                                        {{ journey.MonitoredCall.ExpectedArrivalTime }}
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8 text-gray-500 bg-white rounded-lg">
+                    <span class="text-4xl block mb-4">🚏</span>
+                    Aucun passage prévu pour le moment
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+<!-- ...rest of existing code... -->
+
+<!-- Script pour les mises à jour -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fonction pour formater les horaires d'arrivée
+        function updateArrivalTimes() {
+            document.querySelectorAll('.arrival-time').forEach(element => {
+                const arrivalTime = new Date(element.dataset.time);
+                const now = new Date();
+                const diffMinutes = Math.round((arrivalTime - now) / 60000);
+                
+                if (diffMinutes < 0) {
+                    element.textContent = 'Passé';
+                    element.classList.add('text-gray-400');
+                } else if (diffMinutes < 60) {
+                    element.textContent = `${diffMinutes} min`;
+                    element.classList.add('text-green-600');
+                } else {
+                    element.textContent = arrivalTime.toLocaleTimeString('fr-FR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+            });
+        }
+
+        // Mise à jour initiale et toutes les minutes
+        updateArrivalTimes();
+        setInterval(updateArrivalTimes, 60000);
+
+        // Rafraîchissement de la page toutes les 5 minutes si visible
+        let refreshTimeout;
+        function scheduleRefresh() {
+            if (refreshTimeout) clearTimeout(refreshTimeout);
+            refreshTimeout = setTimeout(() => {
+                if (document.visibilityState === 'visible') {
+                    window.location.reload();
+                }
+            }, 5 * 60 * 1000);
+        }
+
+        document.addEventListener('visibilitychange', scheduleRefresh);
+        scheduleRefresh();
+    });
+</script>
+{% endblock %}
