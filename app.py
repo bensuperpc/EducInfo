@@ -23,24 +23,38 @@ def initialize_database():
     """Initialise la base de données avec les configurations par défaut"""
     try:
         with app.app_context():
+            # Vérifie si les tables existent déjà
             db.create_all()
-            if not User.query.filter_by(identifiant='admin').first():
+            
+            # Initialisation de l'utilisateur admin
+            admin = User.query.filter_by(identifiant='admin').first()
+            if not admin:
                 admin = User(identifiant='admin', role='admin')
                 admin.set_password('admin123')
                 db.session.add(admin)
+            
+            # Initialisation des configurations
+            configs = {
+                'weather': WeatherConfig,
+                'site': SiteConfig,
+                'widget': WidgetConfig
+            }
+            
+            for config_name, config_class in configs.items():
+                if not config_class.query.first():
+                    db.session.add(config_class())
+            
+            try:
                 db.session.commit()
-            if not WeatherConfig.query.first():
-                db.session.add(WeatherConfig())
-            if not SiteConfig.query.first():
-                db.session.add(SiteConfig())
-            if not WidgetConfig.query.first():
-                db.session.add(WidgetConfig())
-            db.session.commit()
-            logger.info('Base de données initialisée avec succès')
+                logger.info('Base de données initialisée avec succès')
+            except Exception as commit_error:
+                logger.error(f"Erreur lors du commit: {commit_error}")
+                db.session.rollback()
+                raise
+                
     except Exception as e:
-        logger.error(f"Erreur d'initialisation: {e}")
-        db.session.rollback()
-        raise
+        logger.error(f"Erreur fatale d'initialisation de la base de données: {e}")
+        raise SystemExit(1)
 
 @app.context_processor
 def utility_processor():
@@ -177,6 +191,15 @@ def admin_dashboard():
     
     # Pré-remplissage des formulaires
     if not forms['widget_form'].is_submitted():
+        widget_config = configs['widget']
+        forms['widget_form'].show_menu_cantine.data = widget_config.show_menu_cantine
+        forms['widget_form'].show_transports.data = widget_config.show_transports
+        forms['widget_form'].cts_stop_code.data = widget_config.cts_stop_code
+        forms['widget_form'].cts_vehicle_mode.data = widget_config.cts_vehicle_mode
+        forms['widget_form'].cts_api_token.data = widget_config.cts_api_token
+
+    # Pré-remplissage des formulaires
+    if not forms['widget_form'].is_submitted():
         forms['widget_form'] = WidgetConfigForm(obj=configs['widget'])
     if not forms['site_form'].is_submitted():
         forms['site_form'].site_name.data = configs['site'].site_name
@@ -191,14 +214,18 @@ def admin_dashboard():
         if 'submit_widget' in request.form:
             if forms['widget_form'].validate_on_submit():
                 widget_config = configs['widget']
-                widget_settings = {
-                    'show_menu_cantine': forms['widget_form'].show_menu_cantine.data,
-                    'show_transports': forms['widget_form'].show_transports.data,
-                    'cts_stop_code': (forms['widget_form'].cts_stop_code.data or "").strip(),
-                    'cts_vehicle_mode': forms['widget_form'].cts_vehicle_mode.data or "undefined",
-                    'cts_api_token': (forms['widget_form'].cts_api_token.data or "").strip()
-                }
-                widget_config.save_widget_settings(widget_settings)
+
+                if 'show_menu_cantine' in request.form:
+                    widget_config.show_menu_cantine = forms['widget_form'].show_menu_cantine.data
+
+                if 'show_transports' in request.form:
+                    widget_config.show_transports = forms['widget_form'].show_transports.data
+                    if widget_config.show_transports:
+                        widget_config.cts_stop_code = forms['widget_form'].cts_stop_code.data
+                        widget_config.cts_vehicle_mode = forms['widget_form'].cts_vehicle_mode.data
+                        widget_config.cts_api_token = forms['widget_form'].cts_api_token.data
+
+                db.session.commit()
                 flash('Configuration widgets mise à jour', 'success')
             return redirect(url_for('admin_dashboard'))
         
@@ -236,7 +263,7 @@ def admin_dashboard():
                 widget_config.cts_stop_code = cts_stop_code
                 widget_config.cts_vehicle_mode = cts_vehicle_mode
                 db.session.commit()
-                flash("Le code d'arrêt CTS a été enregistré pour l'affichage sur la page d'accueil", "success")
+                flash("Le code d'arrêt CTS a été enregistré pour l'affichage sur la page d'accueil", 'success')
                 return redirect(url_for('admin_dashboard'))
             
             return render_template(
@@ -481,6 +508,24 @@ def get_weather_icon(weather_code):
     return weather_icons.get(weather_code, "🌡️")
 
 if __name__ == '__main__':
-    with app.app_context():
-        initialize_database()
-    app.run(debug=True)
+    try:
+        with app.app_context():
+            initialize_database()
+            
+        try:
+            app.run(debug=True, use_reloader=False)
+        except OSError as socket_error:
+            if socket_error.winerror == 10038:
+                logger.error("Erreur de socket Windows. Tentative de redémarrage du serveur...")
+                import time
+                time.sleep(1)
+                app.run(debug=True, use_reloader=False)
+            else:
+                logger.error(f"Erreur de socket non gérée: {socket_error}")
+                raise
+    except SystemExit as e:
+        logger.critical("Arrêt du programme suite à une erreur d'initialisation")
+        raise
+    except Exception as e:
+        logger.critical(f"Erreur inattendue: {e}")
+        raise SystemExit(1)

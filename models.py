@@ -68,9 +68,9 @@ class WidgetConfig(db.Model):
             active_widgets.append('transport')
         return active_widgets
 
-    def save_widget_settings(self, form_data):
-        """Sauvegarde les paramètres des widgets depuis le formulaire"""
-        for key, value in form_data.items():
+    def save_widget_settings(self, settings):
+        """Sauvegarde les paramètres des widgets en conservant les valeurs existantes"""
+        for key, value in settings.items():
             if hasattr(self, key):
                 setattr(self, key, value)
         db.session.commit()
