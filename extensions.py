@@ -31,15 +31,14 @@ def setup_logger():
         
         file_handler = RotatingFileHandler(
             'logs/educinfo.log',
-            maxBytes=1024 * 1024,  # 1MB
+            maxBytes=1024 * 1024,
             backupCount=5,
-            delay=True  # N'ouvre le fichier que lorsque c'est nécessaire
+            delay=True
         )
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
     except Exception as e:
         print(f"Erreur lors de la configuration du fichier de log: {e}")
-        # Continue avec uniquement le logging console
 
     return logger
 

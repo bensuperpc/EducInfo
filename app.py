@@ -165,8 +165,8 @@ def admin_dashboard():
         'site_form': SiteConfigForm(),
         'weather_form': WeatherConfigForm(),
         'widget_form': WidgetConfigForm(),
-        'cts_form': CTSForm(),  # Formulaire pour prévisualiser la recherche CTS
-        'menu_form': MenuItemForm()  # Formulaire pour les menus
+        'cts_form': CTSForm(),
+        'menu_form': MenuItemForm()
     }
     
     configs = {

@@ -41,7 +41,6 @@ class Absence(db.Model):
 class WidgetConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     show_menu_cantine = db.Column(db.Boolean, default=False)
-    # Supprimer le champ menu_cantine car nous utilisons maintenant MenuItem
     show_transports = db.Column(db.Boolean, default=False)
     cts_stop_code = db.Column(db.String(20), default="")
     cts_vehicle_mode = db.Column(db.String(20), default="undefined")
@@ -137,12 +136,12 @@ class Event(db.Model):
 
 class MenuItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    category = db.Column(db.String(50), nullable=False)  # 'entree', 'plat', 'dessert', etc.
+    category = db.Column(db.String(50), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(200))
-    icons = db.Column(db.String(50))  # Pour stocker les icônes (🌱,🌾,etc.)
+    icons = db.Column(db.String(50))
     date = db.Column(db.Date, nullable=False, default=date.today)
-    order = db.Column(db.Integer, default=0)  # Pour l'ordre d'affichage
+    order = db.Column(db.Integer, default=0)
 
     @staticmethod
     def get_menu_categories():

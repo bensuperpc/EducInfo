@@ -29,9 +29,9 @@ class Config:
     WEATHER_API_KEY = '0b0b32c21c0e7a28f8dc6711e0c2e86b'
     WEATHER_CITY = os.environ.get('WEATHER_CITY', 'Paris')
     
-    # CTS API configuration (la clé personnalisable sera enregistrée dans la base via WidgetConfig)
+    # CTS API configuration
     CTS_BASE_URL = os.environ.get('CTS_BASE_URL') or 'https://api.cts-strasbourg.eu'
-    CTS_API_TOKEN = os.environ.get('CTS_API_TOKEN', 'default_token')  # Ajout d'un token par défaut
+    CTS_API_TOKEN = os.environ.get('CTS_API_TOKEN', 'default_token')
 
 class DevelopmentConfig(Config):
     DEBUG = True
