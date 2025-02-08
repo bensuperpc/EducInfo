@@ -62,12 +62,12 @@ class WidgetConfig(db.Model):
         
     def get_all_active_widgets(self):
         """Retourne tous les widgets actifs"""
-        widgets = []
+        active_widgets = []
         if self.show_menu_cantine:
-            widgets.append('menu')
+            active_widgets.append('menu')
         if self.has_valid_transport_config():
-            widgets.append('transport')
-        return widgets
+            active_widgets.append('transport')
+        return active_widgets
 
     def save_widget_settings(self, form_data):
         """Sauvegarde les paramètres des widgets depuis le formulaire"""

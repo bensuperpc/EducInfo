@@ -5,10 +5,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 
-# Création du dossier logs
-if not os.path.exists('logs'):
-    os.makedirs('logs')
-
 # Initialisation des extensions
 db = SQLAlchemy()
 csrf = CSRFProtect()
@@ -17,16 +13,35 @@ login_manager.login_view = 'login'
 login_manager.login_message = 'Veuillez vous connecter pour accéder à cette page.'
 login_manager.login_message_category = 'info'
 
-# Configuration du logger
-logger = logging.getLogger('educinfo')
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')  # Correction de levellevel en levelname
+# Configuration du logger avec gestion des erreurs
+def setup_logger():
+    logger = logging.getLogger('educinfo')
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-handlers = [
-    RotatingFileHandler('logs/educinfo.log', maxBytes=10240, backupCount=10),
-    logging.StreamHandler()
-]
+    # Handler pour la console
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
 
-for handler in handlers:
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+    # Handler pour le fichier avec gestion des erreurs
+    try:
+        if not os.path.exists('logs'):
+            os.makedirs('logs')
+        
+        file_handler = RotatingFileHandler(
+            'logs/educinfo.log',
+            maxBytes=1024 * 1024,  # 1MB
+            backupCount=5,
+            delay=True  # N'ouvre le fichier que lorsque c'est nécessaire
+        )
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+    except Exception as e:
+        print(f"Erreur lors de la configuration du fichier de log: {e}")
+        # Continue avec uniquement le logging console
+
+    return logger
+
+# Création du logger
+logger = setup_logger()

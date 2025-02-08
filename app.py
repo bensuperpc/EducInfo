@@ -110,8 +110,8 @@ def get_cts_arrivals(config):
         params = {
             "MonitoringRef": config.cts_stop_code,
             "VehicleMode": config.cts_vehicle_mode or "undefined",
-            "PreviewInterval": "PT30M",
-            "MaximumStopVisits": 5
+            "PreviewInterval": "PT2H",
+            "MaximumStopVisits": 10
         }
 
         logger.info(f"Requête CTS: {endpoint} avec arrêt {config.cts_stop_code}")
@@ -125,7 +125,8 @@ def get_cts_arrivals(config):
         if response.status_code == 200:
             data = response.json()
             visits = data["ServiceDelivery"]["StopMonitoringDelivery"][0].get("MonitoredStopVisit", [])
-            logger.info(f"Nombre de passages trouvés : {len(visits)}")
+            visits = visits[:10]
+            logger.info(f"Nombre de passages trouvés après limitation : {len(visits)}")
             return visits
         
         logger.error(f"Erreur CTS: statut {response.status_code}, réponse: {response.text}")
@@ -270,7 +271,7 @@ def admin_dashboard():
         absences=Absence.query.all(),
         widget_config=configs['widget'],
         future_events=Event.get_upcoming_events(),
-        menu_items=MenuItem.get_todays_menu(),  # Ajout des éléments du menu
+        menu_items=MenuItem.get_todays_menu(),
         **forms
     )
 

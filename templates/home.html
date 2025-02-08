@@ -191,7 +191,7 @@
         {% endif %}
     </div>
 
-    <!-- Widget Transports (toujours en pleine largeur en dessous) -->
+    <!-- Widget Transports (dans un nouveau conteneur grid) -->
     {% if config.has_valid_transport_config() %}
     <div class="mt-4">
         <div class="bg-gradient-to-br from-blue-50 to-white rounded-lg shadow p-4">
@@ -202,7 +202,7 @@
             </h2>
 
             {% if cts_arrivals %}
-                <div class="grid gap-3 md:grid-cols-3 lg:grid-cols-4">
+                <div class="grid gap-3 md:grid-cols-3 lg:grid-cols-5">
                     {% for visit in cts_arrivals %}
                         {% set journey = visit.MonitoredVehicleJourney %}
                         <div class="bg-white rounded p-3 shadow">
