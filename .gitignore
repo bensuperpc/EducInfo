@@ -1,4 +1,4 @@
-instance/
-logs
 __pycache__
+logs
 .python-version
+instance/
