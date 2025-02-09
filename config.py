@@ -26,7 +26,7 @@ class Config:
     DEFAULT_ADMIN_PASSWORD = os.environ.get('DEFAULT_ADMIN_PASSWORD', 'admin123')
     
     # OpenWeather API configuration
-    WEATHER_API_KEY = '0b0b32c21c0e7a28f8dc6711e0c2e86b'
+    WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY', '')  # Clé vide par défaut
     WEATHER_CITY = os.environ.get('WEATHER_CITY', 'Paris')
     
     # CTS API configuration

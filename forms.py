@@ -26,7 +26,7 @@ class AbsenceForm(FlaskForm):
         ('mercredi', 'Mercredi'),
         ('jeudi', 'Jeudi'),
         ('vendredi', 'Vendredi'),
-        ('samedi', 'Samedi'),  # Ajout du samedi
+        ('samedi', 'Samedi'),
     ])
     submit_absence = SubmitField('Ajouter / Modifier')
     
@@ -36,7 +36,7 @@ class AbsenceForm(FlaskForm):
 
 class WidgetConfigForm(FlaskForm):
     show_menu_cantine = BooleanField('Afficher le menu de la cantine')
-    show_transports = BooleanField('Afficher les transports')  # Champ indépendant
+    show_transports = BooleanField('Afficher les transports')
     cts_stop_code = StringField("Code d'arrêt CTS", validators=[Optional()])
     cts_vehicle_mode = SelectField(
         "Mode de transport",

@@ -79,12 +79,33 @@ def inject_models():
 
 @app.errorhandler(404)
 def not_found_error(error):
+    logger.warning(f'Page non trouvée: {request.url}')
     return render_template('errors/404.html'), 404
 
 @app.errorhandler(500)
 def internal_error(error):
+    logger.error(f'Erreur serveur: {error}')
     db.session.rollback()
-    logger.error(f'Server Error: {error}')
+    return render_template('errors/500.html'), 500
+
+@app.errorhandler(403)
+def forbidden_error(error):
+    logger.warning(f'Accès interdit: {request.url} par {current_user.identifiant if not current_user.is_anonymous else "anonyme"}')
+    return render_template('errors/403.html'), 403
+
+@app.errorhandler(401)
+def unauthorized_error(error):
+    logger.warning(f'Accès non autorisé: {request.url}')
+    return render_template('errors/401.html'), 401
+
+@app.errorhandler(405)
+def method_not_allowed_error(error):
+    logger.warning(f'Méthode non autorisée: {request.method} {request.url}')
+    return render_template('errors/405.html'), 405
+
+@app.errorhandler(Exception)
+def handle_unhandled_error(error):
+    logger.error(f'Erreur non gérée: {error}', exc_info=True)
     return render_template('errors/500.html'), 500
 
 @app.route('/')
