@@ -1,0 +1,4 @@
+instance/
+logs
+__pycache__
+.python-version
