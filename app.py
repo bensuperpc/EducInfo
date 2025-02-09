@@ -459,9 +459,12 @@ def get_weather():
 
         if response.status_code == 200:
             data = response.json()
+            description = data['weather'][0]['description']
+            description = description[:1].upper() + description[1:]
+
             return jsonify({
                 'temp': round(data['main']['temp']),
-                'description': data['weather'][0]['description'],
+                'description': description,
                 'icon': data['weather'][0]['icon']
             })
         
