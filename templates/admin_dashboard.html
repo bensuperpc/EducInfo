@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="min-h-full p-8">
-    <!-- Navigation par onglets (plus grande) -->
-    <nav class="flex gap-6 mb-8" role="tablist">
+<div class="min-h-full p-4">
+    <!-- Navigation par onglets (réduite) -->
+    <nav class="flex gap-3 mb-6" role="tablist">
         {% set tabs = [
             ('absences', 'Absences', '👥'),
             ('events', 'Événements', '📅'),
@@ -10,51 +10,49 @@
             ('settings', 'Paramètres', '⚙️')
         ] %}
         {% for id, label, icon in tabs %}
-            <button class="tab-button px-10 py-5 rounded-2xl text-xl font-medium transition-all" 
+            <button class="tab-button px-6 py-3 rounded-xl text-base font-medium transition-all" 
                     onclick="showTab('{{ id }}')"
                     role="tab"
                     aria-selected="false"
                     aria-controls="{{ id }}-panel">
-                <span class="text-3xl mr-3">{{ icon }}</span>
+                <span class="text-xl mr-2">{{ icon }}</span>
                 {{ label }}
             </button>
         {% endfor %}
     </nav>
 
     <!-- Panneau des absences -->
-    <div id="absences-panel" class="tab-panel bg-white rounded-2xl shadow-xl p-8">
-        <h2 class="text-4xl font-bold mb-10 flex items-center">
-            <span class="text-5xl mr-4">👥</span> Gestion des absences
+    <div id="absences-panel" class="tab-panel bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <span class="text-3xl mr-3">👥</span> Gestion des absences
         </h2>
         
-        <div class="grid grid-cols-12 gap-10">
-            <!-- Formulaire d'ajout (plus grand) -->
-            <div class="col-span-4 space-y-8">
-                <form method="POST" class="space-y-8 bg-gray-50 p-8 rounded-xl">
+        <div class="grid grid-cols-12 gap-6">
+            <!-- Formulaire d'ajout (réduit) -->
+            <div class="col-span-4">
+                <form method="POST" class="space-y-4 bg-gray-50 p-4 rounded-lg">
                     {{ absence_form.hidden_tag() }}
-                    <div class="space-y-4">
-                        {{ absence_form.professeur(class="w-full rounded-xl border-gray-300 text-xl py-4 px-4", placeholder="Nom du professeur") }}
-                        <div class="grid grid-cols-2 gap-4">
-                            {% for choice in absence_form.jours.choices %}
-                            <label class="flex items-center space-x-3 bg-white p-5 rounded-xl border hover:bg-gray-50">
-                                <input type="checkbox" name="jours" value="{{ choice[0] }}" 
-                                       class="w-6 h-6 text-indigo-600 rounded">
-                                <span class="text-xl">{{ choice[1] }}</span>
-                            </label>
-                            {% endfor %}
-                        </div>
-                        <button type="submit" name="submit_absence" class="w-full px-8 py-4 bg-indigo-600 text-white rounded-xl text-xl hover:bg-indigo-700">
-                            Ajouter
-                        </button>
+                    {{ absence_form.professeur(class="w-full rounded-lg border-gray-300 text-sm py-2 px-3", placeholder="Nom du professeur") }}
+                    <div class="grid grid-cols-2 gap-2">
+                        {% for choice in absence_form.jours.choices %}
+                        <label class="flex items-center space-x-2 bg-white p-2 rounded-lg border hover:bg-gray-50">
+                            <input type="checkbox" name="jours" value="{{ choice[0] }}" 
+                                   class="w-4 h-4 text-indigo-600 rounded">
+                            <span class="text-sm">{{ choice[1] }}</span>
+                        </label>
+                        {% endfor %}
                     </div>
+                    <button type="submit" name="submit_absence" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700">
+                        Ajouter
+                    </button>
                 </form>
             </div>
 
-            <!-- Liste des absences (plus grande et en grille) -->
-            <div class="col-span-8 bg-gray-50 p-8 rounded-xl">
-                <h3 class="text-2xl font-semibold mb-8">Absences en cours</h3>
+            <!-- Liste des absences (plus compacte) -->
+            <div class="col-span-8 bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-4">Absences en cours</h3>
                 {% if absences %}
-                    <div class="grid grid-cols-3 gap-6">
+                    <div class="grid grid-cols-3 gap-3">
                         {% for absence in absences %}
                         <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                             <div class="flex flex-col">
@@ -80,8 +78,8 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="text-center py-12 text-gray-500 text-xl">
-                        <span class="text-6xl block mb-4">✨</span>
+                    <div class="text-center py-8 text-gray-500">
+                        <span class="text-4xl block mb-2">✨</span>
                         Aucune absence enregistrée
                     </div>
                 {% endif %}
