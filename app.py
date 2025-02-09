@@ -224,6 +224,7 @@ def admin_dashboard():
                         widget_config.cts_stop_code = forms['widget_form'].cts_stop_code.data
                         widget_config.cts_vehicle_mode = forms['widget_form'].cts_vehicle_mode.data
                         widget_config.cts_api_token = forms['widget_form'].cts_api_token.data
+                widget_config.cts_stop_display = forms['widget_form'].cts_stop_display.data
 
                 db.session.commit()
                 flash('Configuration widgets mise à jour', 'success')
@@ -513,7 +514,7 @@ if __name__ == '__main__':
             initialize_database()
             
         try:
-            app.run(debug=True, use_reloader=False)
+            app.run(debug=False, use_reloader=False)
         except OSError as socket_error:
             if socket_error.winerror == 10038:
                 logger.error("Erreur de socket Windows. Tentative de redémarrage du serveur...")

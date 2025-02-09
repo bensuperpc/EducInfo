@@ -37,6 +37,7 @@ class Absence(db.Model):
     mercredi = db.Column(db.Boolean, default=False)
     jeudi = db.Column(db.Boolean, default=False)
     vendredi = db.Column(db.Boolean, default=False)
+    samedi = db.Column(db.Boolean, default=False)  # Ajout du samedi
 
 class WidgetConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -45,6 +46,7 @@ class WidgetConfig(db.Model):
     cts_stop_code = db.Column(db.String(20), default="")
     cts_vehicle_mode = db.Column(db.String(20), default="undefined")
     cts_api_token = db.Column(db.String(64), default="")
+    cts_stop_display = db.Column(db.String(50), default="")  # Nouveau champ pour l'affichage personnalisé
 
     @staticmethod
     def get_config():

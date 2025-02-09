@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="min-h-full p-4">
-    <!-- En-tête avec navigation par onglets -->
-    <nav class="flex gap-2 mb-6" role="tablist">
+<div class="min-h-full p-8">
+    <!-- Navigation par onglets (plus grande) -->
+    <nav class="flex gap-6 mb-8" role="tablist">
         {% set tabs = [
             ('absences', 'Absences', '👥'),
             ('events', 'Événements', '📅'),
@@ -10,116 +10,122 @@
             ('settings', 'Paramètres', '⚙️')
         ] %}
         {% for id, label, icon in tabs %}
-            <button class="tab-button px-6 py-3 rounded-lg font-medium transition-all" 
+            <button class="tab-button px-10 py-5 rounded-2xl text-xl font-medium transition-all" 
                     onclick="showTab('{{ id }}')"
                     role="tab"
                     aria-selected="false"
                     aria-controls="{{ id }}-panel">
-                <span class="text-xl mr-2">{{ icon }}</span>
+                <span class="text-3xl mr-3">{{ icon }}</span>
                 {{ label }}
             </button>
         {% endfor %}
     </nav>
 
     <!-- Panneau des absences -->
-    <div id="absences-panel" class="tab-panel bg-white rounded-xl shadow-lg p-6">
-        <h2 class="text-2xl font-bold mb-6 flex items-center">
-            <span class="text-3xl mr-3">👥</span> Gestion des absences
+    <div id="absences-panel" class="tab-panel bg-white rounded-2xl shadow-xl p-8">
+        <h2 class="text-4xl font-bold mb-10 flex items-center">
+            <span class="text-5xl mr-4">👥</span> Gestion des absences
         </h2>
         
-        <div class="grid lg:grid-cols-2 gap-6">
-            <!-- Formulaire d'ajout -->
-            <div class="space-y-4">
-                <form method="POST" class="space-y-4 bg-gray-50 p-4 rounded-lg">
+        <div class="grid grid-cols-12 gap-10">
+            <!-- Formulaire d'ajout (plus grand) -->
+            <div class="col-span-4 space-y-8">
+                <form method="POST" class="space-y-8 bg-gray-50 p-8 rounded-xl">
                     {{ absence_form.hidden_tag() }}
-                    <div class="flex gap-4">
-                        {{ absence_form.professeur(class="flex-1 rounded border-gray-300", placeholder="Nom du professeur") }}
-                        <button type="submit" name="submit_absence" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                    <div class="space-y-4">
+                        {{ absence_form.professeur(class="w-full rounded-xl border-gray-300 text-xl py-4 px-4", placeholder="Nom du professeur") }}
+                        <div class="grid grid-cols-2 gap-4">
+                            {% for choice in absence_form.jours.choices %}
+                            <label class="flex items-center space-x-3 bg-white p-5 rounded-xl border hover:bg-gray-50">
+                                <input type="checkbox" name="jours" value="{{ choice[0] }}" 
+                                       class="w-6 h-6 text-indigo-600 rounded">
+                                <span class="text-xl">{{ choice[1] }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        <button type="submit" name="submit_absence" class="w-full px-8 py-4 bg-indigo-600 text-white rounded-xl text-xl hover:bg-indigo-700">
                             Ajouter
                         </button>
-                    </div>
-                    <div class="grid grid-cols-5 gap-2">
-                        {% for choice in absence_form.jours.choices %}
-                        <label class="flex items-center space-x-2 bg-white p-2 rounded border hover:bg-gray-50">
-                            <input type="checkbox" name="jours" value="{{ choice[0] }}" 
-                                   class="text-indigo-600 rounded">
-                            <span>{{ choice[1] }}</span>
-                        </label>
-                        {% endfor %}
                     </div>
                 </form>
             </div>
 
-            <!-- Liste des absences -->
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold mb-4">Absences en cours</h3>
+            <!-- Liste des absences (plus grande et en grille) -->
+            <div class="col-span-8 bg-gray-50 p-8 rounded-xl">
+                <h3 class="text-2xl font-semibold mb-8">Absences en cours</h3>
                 {% if absences %}
-                    <div class="space-y-2">
+                    <div class="grid grid-cols-3 gap-6">
                         {% for absence in absences %}
-                        <div class="flex items-center justify-between bg-white p-3 rounded-lg">
-                            <div>
-                                <p class="font-medium">{{ absence.professeur }}</p>
-                                <p class="text-sm text-gray-600">
+                        <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex flex-col">
+                                <p class="text-xl font-medium mb-3">{{ absence.professeur }}</p>
+                                <p class="text-gray-600 text-lg">
                                     {% set jours = [] %}
                                     {%- if absence.lundi %}{% set _ = jours.append('Lun') %}{% endif -%}
                                     {%- if absence.mardi %}{% set _ = jours.append('Mar') %}{% endif -%}
                                     {%- if absence.mercredi %}{% set _ = jours.append('Mer') %}{% endif -%}
                                     {%- if absence.jeudi %}{% set _ = jours.append('Jeu') %}{% endif -%}
                                     {%- if absence.vendredi %}{% set _ = jours.append('Ven') %}{% endif -%}
+                                    {%- if absence.samedi %}{% set _ = jours.append('Sam') %}{% endif -%}
                                     {{ jours|join(' - ') }}
                                 </p>
+                                <form method="POST" class="mt-4">
+                                    <input type="hidden" name="delete_absence" value="{{ absence.id }}">
+                                    <button type="submit" class="text-red-600 hover:text-red-800 p-2 text-2xl">
+                                        🗑️
+                                    </button>
+                                </form>
                             </div>
-                            <form method="POST" class="flex-none">
-                                <input type="hidden" name="delete_absence" value="{{ absence.id }}">
-                                <button type="submit" class="text-red-600 hover:text-red-800">
-                                    <span class="text-xl">🗑️</span>
-                                </button>
-                            </form>
                         </div>
                         {% endfor %}
                     </div>
                 {% else %}
-                    <p class="text-gray-500 text-center">Aucune absence enregistrée</p>
+                    <div class="text-center py-12 text-gray-500 text-xl">
+                        <span class="text-6xl block mb-4">✨</span>
+                        Aucune absence enregistrée
+                    </div>
                 {% endif %}
             </div>
         </div>
     </div>
 
     <!-- Panneau des événements -->
-    <div id="events-panel" class="tab-panel bg-white rounded-xl shadow-lg p-6 hidden">
-        <h2 class="text-2xl font-bold mb-6 flex items-center">
-            <span class="text-3xl mr-3">📅</span> Gestion des événements
+    <div id="events-panel" class="tab-panel bg-white rounded-2xl shadow-xl p-8 hidden h-[calc(100vh-12rem)]">
+        <h2 class="text-4xl font-bold mb-8 flex items-center">
+            <span class="text-5xl mr-4">📅</span> Gestion des événements
         </h2>
         
-        <div class="grid lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-12 gap-8 h-[calc(100%-5rem)] overflow-hidden">
             <!-- Formulaire d'ajout -->
-            <form method="POST" class="space-y-4 bg-gray-50 p-4 rounded-lg">
-                {{ event_form.hidden_tag() }}
-                {{ event_form.title(class="w-full rounded border-gray-300", placeholder="Titre de l'événement") }}
-                {{ event_form.date(class="w-full rounded border-gray-300", type="date") }}
-                {{ event_form.description(class="w-full rounded border-gray-300", rows="3", placeholder="Description (optionnel)") }}
-                {{ event_form.submit_event(class="w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700") }}
-            </form>
+            <div class="col-span-5 space-y-6 h-full overflow-y-auto pr-4">
+                <form method="POST" class="bg-gray-50 p-6 rounded-xl space-y-6">
+                    {{ event_form.hidden_tag() }}
+                    {{ event_form.title(class="w-full rounded-xl border-gray-300 text-lg py-3", placeholder="Titre de l'événement") }}
+                    {{ event_form.date(class="w-full rounded-xl border-gray-300 text-lg py-3", type="date") }}
+                    {{ event_form.description(class="w-full rounded-xl border-gray-300 text-lg", rows="4", placeholder="Description (optionnel)") }}
+                    {{ event_form.submit_event(class="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl text-lg hover:bg-indigo-700") }}
+                </form>
+            </div>
 
             <!-- Liste des événements -->
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold mb-4">Événements à venir</h3>
+            <div class="col-span-7 bg-gray-50 p-6 rounded-xl h-full overflow-y-auto">
+                <h3 class="text-2xl font-semibold mb-6">Événements à venir</h3>
                 {% if future_events %}
-                    <div class="space-y-2">
+                    <div class="grid grid-cols-2 gap-4">
                         {% for event in future_events %}
-                        <div class="bg-white p-3 rounded-lg">
+                        <div class="bg-white p-5 rounded-xl shadow-sm hover:shadow-md transition-all">
                             <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="font-medium">{{ event.title }}</p>
-                                    <p class="text-sm text-indigo-600">{{ event.date.strftime('%d/%m/%Y') }}</p>
+                                <div class="space-y-2">
+                                    <h4 class="text-xl font-bold text-gray-900">{{ event.title }}</h4>
+                                    <p class="text-indigo-600">{{ event.date.strftime('%d/%m/%Y') }}</p>
                                     {% if event.description %}
-                                    <p class="text-sm text-gray-600 mt-1">{{ event.description }}</p>
+                                    <p class="text-gray-600">{{ event.description }}</p>
                                     {% endif %}
                                 </div>
-                                <form method="POST" class="flex-none">
+                                <form method="POST">
                                     <input type="hidden" name="delete_event" value="{{ event.id }}">
-                                    <button type="submit" class="text-red-600 hover:text-red-800">
-                                        <span class="text-xl">🗑️</span>
+                                    <button type="submit" class="text-red-600 hover:text-red-800 p-2">
+                                        <span class="text-2xl">🗑️</span>
                                     </button>
                                 </form>
                             </div>
@@ -134,40 +140,37 @@
     </div>
 
     <!-- Panneau de la cantine -->
-    <div id="cantine-panel" class="tab-panel bg-white rounded-xl shadow-lg p-6 hidden">
-        <h2 class="text-2xl font-bold mb-6 flex items-center">
-            <span class="text-3xl mr-3">🍽️</span> Gestion du Menu
+    <div id="cantine-panel" class="tab-panel bg-white rounded-2xl shadow-xl p-8 hidden h-[calc(100vh-12rem)]">
+        <h2 class="text-4xl font-bold mb-8 flex items-center">
+            <span class="text-5xl mr-4">🍽️</span> Gestion du Menu
         </h2>
-
-        <div class="grid lg:grid-cols-2 gap-6">
+        
+        <div class="grid grid-cols-12 gap-8 h-[calc(100%-5rem)] overflow-hidden">
             <!-- Formulaire d'ajout -->
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold mb-4">Ajouter un plat</h3>
-                <form method="POST" class="space-y-4">
+            <div class="col-span-5 space-y-6 h-full overflow-y-auto pr-4">
+                <form method="POST" class="bg-gray-50 p-6 rounded-xl space-y-6">
                     {{ menu_form.hidden_tag() }}
-                    <div class="grid gap-4">
-                        {{ menu_form.category(class="w-full rounded border-gray-300") }}
-                        {{ menu_form.name(class="w-full rounded border-gray-300", placeholder="Nom du plat") }}
-                        {{ menu_form.description(class="w-full rounded border-gray-300", placeholder="Description (optionnel)") }}
-                        <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Caractéristiques</label>
-                            <div class="flex flex-wrap gap-2">
-                                {% for value, label in menu_form.icons.choices %}
-                                <label class="inline-flex items-center bg-white px-3 py-1 rounded-full border hover:bg-gray-50">
-                                    <input type="checkbox" name="icons" value="{{ value }}" class="mr-2">
-                                    <span>{{ label }}</span>
-                                </label>
-                                {% endfor %}
-                            </div>
+                    {{ menu_form.category(class="w-full rounded-xl border-gray-300 text-lg py-3") }}
+                    {{ menu_form.name(class="w-full rounded-xl border-gray-300 text-lg py-3", placeholder="Nom du plat") }}
+                    {{ menu_form.description(class="w-full rounded-xl border-gray-300 text-lg py-3", placeholder="Description (optionnel)") }}
+                    <div class="space-y-3">
+                        <label class="text-lg font-medium text-gray-700">Caractéristiques</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            {% for value, label in menu_form.icons.choices %}
+                            <label class="flex items-center p-3 bg-white rounded-xl border hover:bg-gray-50">
+                                <input type="checkbox" name="icons" value="{{ value }}" class="w-5 h-5 text-indigo-600 mr-3">
+                                <span class="text-lg">{{ label }}</span>
+                            </label>
+                            {% endfor %}
                         </div>
-                        {{ menu_form.date(class="w-full rounded border-gray-300") }}
-                        {{ menu_form.submit_menu_item(class="w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700") }}
                     </div>
+                    {{ menu_form.date(class="w-full rounded-xl border-gray-300 text-lg py-3") }}
+                    {{ menu_form.submit_menu_item(class="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl text-lg hover:bg-indigo-700") }}
                 </form>
             </div>
 
-            <!-- Menu du jour -->
-            <div class="bg-gray-50 p-4 rounded-lg">
+            <!-- Liste des plats -->
+            <div class="col-span-7 bg-gray-50 p-6 rounded-xl h-full overflow-y-auto">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold">Menu du jour</h3>
                     <form method="POST" class="flex items-center">
@@ -227,103 +230,105 @@
     </div>
 
     <!-- Panneau des paramètres -->
-    <div id="settings-panel" class="tab-panel bg-white rounded-xl shadow-lg p-6 hidden">
-        <h2 class="text-2xl font-bold mb-6 flex items-center">
-            <span class="text-3xl mr-3">⚙️</span> Paramètres
+    <div id="settings-panel" class="tab-panel bg-white rounded-2xl shadow-xl p-8 hidden h-[calc(100vh-12rem)]">
+        <h2 class="text-4xl font-bold mb-8 flex items-center">
+            <span class="text-5xl mr-4">⚙️</span> Paramètres
         </h2>
         
-        <div class="grid gap-6">
-            <!-- Configuration du site -->
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold mb-4">Configuration de l'établissement</h3>
-                <form method="POST" class="space-y-4">
-                    {{ site_form.hidden_tag() }}
-                    <div class="flex gap-4">
-                        {{ site_form.site_name(class="flex-1 rounded border-gray-300", placeholder="Nom de l'établissement") }}
-                        {{ site_form.submit_site(class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700") }}
-                    </div>
-                </form>
-            </div>
-
-            <!-- Configuration de la météo -->
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold mb-4">Configuration de la météo</h3>
-                <form method="POST" class="space-y-4">
-                    {{ weather_form.hidden_tag() }}
-                    <div class="flex items-center mb-4">
-                        {{ weather_form.show_weather(class="mr-2") }}
-                        {{ weather_form.show_weather.label(class="text-gray-700") }}
-                    </div>
-                    <div class="grid gap-4">
-                        {{ weather_form.city(class="rounded border-gray-300", placeholder="Ville") }}
-                        {{ weather_form.api_key(class="rounded border-gray-300", placeholder="Clé API OpenWeather") }}
-                        {{ weather_form.submit_weather(class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700") }}
-                    </div>
-                </form>
-            </div>
-
-            <!-- Configuration des transports -->
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold mb-4">Configuration des Transports CTS</h3>
-                <form method="POST" class="space-y-4">
-                    {{ widget_form.hidden_tag() }}
-                    <div class="flex items-center mb-4">
-                        {{ widget_form.show_transports(class="mr-2") }}
-                        {{ widget_form.show_transports.label(class="text-gray-700") }}
-                    </div>
-                    <div class="grid gap-4">
-                        {{ widget_form.cts_stop_code(class="rounded border-gray-300", placeholder="Code d'arrêt") }}
-                        {{ widget_form.cts_vehicle_mode(class="rounded border-gray-300") }}
-                        {{ widget_form.cts_api_token(class="rounded border-gray-300", placeholder="Clé API CTS") }}
-                        {{ widget_form.submit_widget(class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700") }}
-                    </div>
-                </form>
-
-                <!-- Prévisualisation CTS -->
-                <div class="mt-6 border-t border-gray-200 pt-4">
-                    <h4 class="font-medium text-gray-700 mb-4">Tester un arrêt</h4>
+        <div class="grid grid-cols-12 gap-8 h-[calc(100%-5rem)] overflow-hidden">
+            <!-- Colonne de gauche : Configurations principales -->
+            <div class="col-span-4 space-y-6 h-full overflow-y-auto pr-4">
+                <!-- Configuration du site -->
+                <div class="bg-gray-50 p-6 rounded-xl">
+                    <h3 class="text-2xl font-semibold mb-6">Configuration de l'établissement</h3>
                     <form method="POST" class="space-y-4">
-                        {{ cts_form.hidden_tag() }}
-                        <div class="grid gap-4">
-                            {{ cts_form.stop_code(class="rounded border-gray-300", placeholder="Code d'arrêt à tester") }}
-                            {{ cts_form.vehicle_mode(class="rounded border-gray-300") }}
-                            <div class="flex gap-2">
-                                {{ cts_form.submit_cts(class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700") }}
-                                {{ cts_form.submit_cts_save(class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700") }}
-                            </div>
-                        </div>
+                        {{ site_form.hidden_tag() }}
+                        {{ site_form.site_name(class="w-full rounded-xl border-gray-300 text-lg py-3", placeholder="Nom de l'établissement") }}
+                        {{ site_form.submit_site(class="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl text-lg hover:bg-indigo-700") }}
                     </form>
+                </div>
 
-                    {% if cts_results is defined and cts_results %}
-                    <div class="mt-4 space-y-2">
-                        <h5 class="font-medium text-gray-700">Résultats du test :</h5>
-                        {% for visit in cts_results %}
-                            {% set journey = visit.MonitoredVehicleJourney %}
-                            <div class="bg-white p-3 rounded border">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xl">
-                                        {% if journey.VehicleMode == 'bus' %}🚌{% else %}🚊{% endif %}
-                                    </span>
-                                    <span class="font-bold">{{ journey.PublishedLineName }}</span>
-                                    <span class="text-gray-600">→ {{ journey.DestinationName }}</span>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
+                <!-- Modification du mot de passe -->
+                <div class="bg-gray-50 p-6 rounded-xl">
+                    <h3 class="text-2xl font-semibold mb-6">Modification du mot de passe</h3>
+                    <form method="POST" class="space-y-4">
+                        {{ password_form.hidden_tag() }}
+                        {{ password_form.current_password(class="w-full rounded-xl border-gray-300 text-lg", placeholder="Mot de passe actuel") }}
+                        {{ password_form.new_password(class="w-full rounded-xl border-gray-300 text-lg", placeholder="Nouveau mot de passe") }}
+                        {{ password_form.confirm_password(class="w-full rounded-xl border-gray-300 text-lg", placeholder="Confirmer le mot de passe") }}
+                        {{ password_form.submit_password(class="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl text-lg hover:bg-indigo-700") }}
+                    </form>
                 </div>
             </div>
 
-            <!-- Modification du mot de passe -->
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold mb-4">Modification du mot de passe</h3>
-                <form method="POST" class="space-y-4">
-                    {{ password_form.hidden_tag() }}
-                    {{ password_form.current_password(class="w-full rounded border-gray-300", placeholder="Mot de passe actuel") }}
-                    {{ password_form.new_password(class="w-full rounded border-gray-300", placeholder="Nouveau mot de passe") }}
-                    {{ password_form.confirm_password(class="w-full rounded border-gray-300", placeholder="Confirmer le mot de passe") }}
-                    {{ password_form.submit_password(class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700") }}
-                </form>
+            <!-- Colonne centrale : Configuration météo et transports -->
+            <div class="col-span-4 space-y-6 h-full overflow-y-auto pr-4">
+                <!-- Configuration de la météo -->
+                <div class="bg-gray-50 p-6 rounded-xl">
+                    <h3 class="text-2xl font-semibold mb-6">Configuration de la météo</h3>
+                    <form method="POST" class="space-y-4">
+                        {{ weather_form.hidden_tag() }}
+                        <div class="flex items-center mb-6">
+                            {{ weather_form.show_weather(class="w-6 h-6 mr-3") }}
+                            {{ weather_form.show_weather.label(class="text-lg text-gray-700") }}
+                        </div>
+                        {{ weather_form.city(class="w-full rounded-xl border-gray-300 text-lg py-3", placeholder="Ville") }}
+                        {{ weather_form.api_key(class="w-full rounded-xl border-gray-300 text-lg py-3", placeholder="Clé API OpenWeather") }}
+                        {{ weather_form.submit_weather(class="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl text-lg hover:bg-indigo-700 mt-4") }}
+                    </form>
+                </div>
+            </div>
+
+            <!-- Colonne droite : Configuration des transports -->
+            <div class="col-span-4 space-y-6 h-full overflow-y-auto">
+                <div class="bg-gray-50 p-6 rounded-xl">
+                    <h3 class="text-2xl font-semibold mb-6">Configuration des Transports</h3>
+                    <form method="POST" class="space-y-6">
+                        {{ widget_form.hidden_tag() }}
+                        <div class="flex items-center mb-6">
+                            {{ widget_form.show_transports(class="w-6 h-6 mr-3") }}
+                            {{ widget_form.show_transports.label(class="text-lg text-gray-700") }}
+                        </div>
+                        <div class="space-y-4">
+                            {{ widget_form.cts_stop_code(class="w-full rounded-xl border-gray-300 text-lg py-3", placeholder="Code d'arrêt") }}
+                            {{ widget_form.cts_stop_display(class="w-full rounded-xl border-gray-300 text-lg py-3", placeholder="Texte d'affichage personnalisé") }}
+                            {{ widget_form.cts_vehicle_mode(class="w-full rounded-xl border-gray-300 text-lg py-3") }}
+                            {{ widget_form.cts_api_token(class="w-full rounded-xl border-gray-300 text-lg py-3", placeholder="Clé API CTS") }}
+                            {{ widget_form.submit_widget(class="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl text-lg hover:bg-indigo-700") }}
+                        </div>
+                    </form>
+
+                    <!-- Test CTS -->
+                    <div class="mt-8 pt-6 border-t border-gray-200">
+                        <h4 class="text-xl font-medium text-gray-700 mb-4">Tester un arrêt</h4>
+                        <form method="POST" class="space-y-4">
+                            {{ cts_form.hidden_tag() }}
+                            {{ cts_form.stop_code(class="w-full rounded-xl border-gray-300 text-lg py-3", placeholder="Code d'arrêt à tester") }}
+                            {{ cts_form.vehicle_mode(class="w-full rounded-xl border-gray-300 text-lg py-3") }}
+                            <div class="grid grid-cols-2 gap-4">
+                                {{ cts_form.submit_cts(class="px-6 py-3 bg-gray-600 text-white rounded-xl text-lg hover:bg-gray-700") }}
+                                {{ cts_form.submit_cts_save(class="px-6 py-3 bg-indigo-600 text-white rounded-xl text-lg hover:bg-indigo-700") }}
+                            </div>
+                        </form>
+
+                        {% if cts_results is defined and cts_results %}
+                            <div class="mt-6 space-y-3">
+                                <h5 class="font-medium text-gray-700 text-lg mb-4">Résultats :</h5>
+                                {% for visit in cts_results %}
+                                    <div class="bg-white p-3 rounded border">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xl">
+                                                {% if journey.VehicleMode == 'bus' %}🚌{% else %}🚊{% endif %}
+                                            </span>
+                                            <span class="font-bold">{{ journey.PublishedLineName }}</span>
+                                            <span class="text-gray-600">→ {{ journey.DestinationName }}</span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -26,6 +26,7 @@ class AbsenceForm(FlaskForm):
         ('mercredi', 'Mercredi'),
         ('jeudi', 'Jeudi'),
         ('vendredi', 'Vendredi'),
+        ('samedi', 'Samedi'),  # Ajout du samedi
     ])
     submit_absence = SubmitField('Ajouter / Modifier')
     
@@ -43,6 +44,7 @@ class WidgetConfigForm(FlaskForm):
         default="undefined"
     )
     cts_api_token = StringField("Clé API CTS", validators=[Optional()])
+    cts_stop_display = StringField("Texte à afficher (ex: 'Lycée')", validators=[Optional()])
     submit_widget = SubmitField('Enregistrer les paramètres')
 
 class EventForm(FlaskForm):
