@@ -544,7 +544,7 @@ if __name__ == '__main__':
                 logger.error("Erreur de socket Windows. Tentative de redémarrage du serveur...")
                 import time
                 time.sleep(1)
-                app.run(debug=True, use_reloader=False)
+                app.run(debug=False, use_reloader=False)
             else:
                 logger.error(f"Erreur de socket non gérée: {socket_error}")
                 raise
